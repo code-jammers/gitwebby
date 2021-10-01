@@ -1,0 +1,59 @@
+{
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "@webcomponents/webcomponentsjs": "^2.5.0",
+    "dayjs": "^1.10.5",
+    "lit-element": "^2.5.1",
+    "lit-html": "^1.4.1",
+    "macro-carousel": "^1.0.0",
+    "natives": "^1.1.6",
+    "navaid": "^1.2.0",
+    "page": "^1.11.6"
+  },
+  "devDependencies": {
+    "@open-wc/building-rollup": "^1.10.0",
+    "@types/page": "^1.11.2",
+    "@typescript-eslint/eslint-plugin": "^4.27.0",
+    "@typescript-eslint/parser": "^4.27.0",
+    "@web/dev-server": "^0.1.17",
+    "@web/dev-server-rollup": "^0.3.4",
+    "concurrently": "^6.2.0",
+    "eslint": "^7.28.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "husky": "^6.0.0",
+    "lint-staged": "^11.0.0",
+    "prettier": "^2.3.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.51.2",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-css-only": "^3.1.0",
+    "rollup-plugin-lit-css": "^2.1.0",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.2"
+  },
+  "scripts": {
+    "start": "concurrently --kill-others --names tsc,wds  \"npm run tsc:watch\" \"web-dev-server\"",
+    "tsc:watch": "tsc --watch",
+    "lint:eslint": "eslint --ext .ts  . --ignore-path .gitignore",
+    "format:eslint": "eslint --ext .ts . --fix --ignore-path .gitignore",
+    "lint:prettier": "prettier \"**/*.ts\" --check --ignore-path .gitignore",
+    "format:prettier": "prettier \"**/*.ts\" --write --ignore-path .gitignore",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "format": "npm run format:eslint && npm run format:prettier",
+    "start:build": "web-dev-server --root-dir dist --app-index index.html --open --compatibility none --port 9090",
+    "build": "rimraf dist && tsc && rollup -c rollup.config.js"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ]
+  }
+}
