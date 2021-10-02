@@ -138,7 +138,13 @@ do
             fi
             j=$n
             ((j++))
-            name=$(echo "$fullp" | rev | cut -d'/' -f-$j | rev)
+	    #reverse string to remove last n fields and reverse back
+	    revstring=""
+	    for((k=${#fullp};k>-1;k--)); do revstring="${revstring}${fullp:$k:1}"; done
+	    revtrim=$(echo "$revstring" | cut -d'/' -f-$j)
+	    
+            name=""  # $(echo "$fullp" | rev | cut -d'/' -f-$j | rev)
+            for((k=${#revtrim};k>-1;k--)); do name="${name}${revtrim:$k:1}"; done
             readme=$(ls | grep -i readme | head -1)
             descr=""
             if [[ -n "$readme" ]]; then
