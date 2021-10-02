@@ -5,6 +5,12 @@
 - npm i
 - npm start
 
+## Easiest method to get dev data
+
+```sh
+bin/gitwebbyupd ../ ./
+```
+
 ## Dev data simple
 
 This example only has 1 nesting.
