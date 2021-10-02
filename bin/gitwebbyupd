@@ -178,6 +178,8 @@ do
             #ls "../" | grep "$d"
             normname=$(echo "$name" | sed 's/\//__/g')
 	    branches=$(git branch 2>>/dev/null| sed 's/\*//' | sed 's/ //g')
+	    mbranch=$(git rev-parse --abbrev-ref HEAD)
+	    echo "$mbranch" >"${dotdir}/${normname}.m.txt"
             echo "$branches" >"${dotdir}/${normname}.b.txt"
 	    for b in `echo "$branches"`;
             do
@@ -206,6 +208,7 @@ ${newlst}"
 done
 
 repojs="window.REPOS=["
+rjs="window.BRANCHES={"
 oldIfs="$IFS"
 IFS='
 '
@@ -218,19 +221,32 @@ last_mod
 authors
 descr'
     i=1
+    name=""
     for col in `echo "${rec}"`;
     do
         key=$(echo "$keys" | head -"${i}" | tail -1)
+	if [[ $i -eq 1 ]]; then
+	    name="$col"
+	fi
         repojs="${repojs}${key}:"
         repojs="${repojs}'${col}',"
         ((i++))
     done
     repojs="${repojs}},"
+    normname=$(echo "$name" | sed 's/\//__/g')
+    mainb=$(cat "${dotdir}/${normname}.m.txt")
+    rjs="${rjs}'$normname':{main:'${mainb}',branches:["
+    for b in `cat "${dotdir}/${normname}.b.txt"`;
+    do
+	rjs="${rjs}'${b}',"
+    done
+    rjs="${rjs}]},"
 done
 IFS="$oldIfs"
 repojs="${repojs}];"
+rjs="${rjs}};"
 echo "$repojs" >"${datdir}/repos.js"
-
+echo "$rjs" >"${datdir}/branches.js"
 cd "${rtd}"
 
 
