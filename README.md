@@ -5,6 +5,22 @@
 - npm i
 - npm start
 
+## Dev data simple
+
+This example only has 1 nesting.
+
+```sh
+dir=$(pwd)
+mkdir -p ../gitwebby-repo-root-simple
+cd ../gitwebby-repo-root-simple
+git clone https://github.com/code-jammers/gitwebby.git gitwebby_apple
+git clone https://github.com/code-jammers/gitwebby.git gitwebby_banana
+cd "$dir"
+bin/gitwebbyupd ../gitwebby-repo-root-simple .
+
+#end
+```
+
 ## Dev data
 
 To cleanly get some dev data generated to the data/ directory, cd into the
@@ -47,4 +63,5 @@ cd "$dir"
 
 bin/gitwebbyupd --proj=2 ../gitwebby-repo-root .
 
+#end
 ```
