@@ -183,7 +183,7 @@ do
             echo "$branches" >"${dotdir}/${normname}.b.txt"
 	    for b in `echo "$branches"`;
             do
-                commits=$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
+                commits=$(git log main --pretty=format:"%H$tab%an$tab%aI$tab%s") #$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
                 echo "$commits">"${dotdir}/${normname}.${b}.c.txt"
                 #echo "$commits"
             done
@@ -239,6 +239,32 @@ descr'
     for b in `cat "${dotdir}/${normname}.b.txt"`;
     do
 	rjs="${rjs}'${b}',"
+	cjs="if (window.COMMITS==null)window.COMMITS={};window.COMMITS['${normname}]=["  #commits js
+	for c in `cat "${dotdir}/${normname}.${b}.c.txt"`;
+	do
+	    ti=0
+	    cjs="${cjs}{"  # {hash:'${c}',descr:'',timestamp:''}),"
+	    oIfs=$IFS
+	    IFS='	'
+	    for ccol in `echo "$c"`;
+	    do
+		if [[ $ti -eq 0 ]]; then
+		    cjs="${cjs}hash:'${ccol}',"
+		elif [[ $ti -eq 1 ]]; then
+		    cjs="${cjs}author:'${ccol}',"
+		elif [[ $ti -eq 2 ]]; then
+		    cjs="${cjs}timestamp:'${ccol}',"
+		else
+		    cjs="${cjs}subject:'${ccol}',"
+		fi
+		((ti++))
+	    done
+	    IFS=$oIfs
+	    cjs="${cjs}},"
+	    
+	done
+	cjs="${cjs}];"
+	echo "${cjs}" >"${datdir}/${normname}.${b}.commits.js"
     done
     rjs="${rjs}]},"
 done
