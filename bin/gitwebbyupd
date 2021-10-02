@@ -1,0 +1,194 @@
+#!/bin/bash
+
+# GitWebby update script
+
+rtd=$(pwd)    # return directory
+n=0
+if [[ "${1:0:7}" = "--proj=" ]]; then
+    n="${1:7}"
+    shift
+fi
+rpd="${1%/}"  # repositories' parent directory
+upd="${2%/}"  # update directory
+help=0
+if [[ "-h" = "$1" ]]; then
+    help=1
+fi
+if [[ "--help" = "$1" ]]; then
+    help=1
+fi
+if [[ $help -eq 1 ]]; then
+    echo "gitwebbyupd will locally deploy web browsable versions of your code"
+    echo "for your local git repositories."
+    echo
+    echo "If all of your repositories are contained in ~/repos and"
+    echo "you want to deploy to ~/www/gitwebby you would run:"
+    echo "    bin/gitwebbyupd ~/repos ~/www/gitwebby"
+    echo "If your repos are organized by project, ie: ~/projects/work, ~/projects/home"
+    echo "you can run like so:"
+    echo "    bin/gitwebbyupd --proj=1 ~/projects ~/www/gitwebby"
+    echo "If your repos are organized by platform,"
+    echo "ie: ~/repo-hosts/github/usersname, ~/repo-hosts/gitlab/usersname"
+    echo "you can run like so:"
+    echo "    bin/gitwebbyupd --proj=2 ~/repo-hosts ~/www/gitwebby"
+    echo
+    echo "A gitwebby instance requires that all repositories follow the same"
+    echo "folder organization. You can have as many nested folders (--proj=n)."
+    echo "You can combine uniformly-structured folders listed in different places"
+    echo "by creating a single folder that contains soft symbolic links to all "
+    echo "your git repository folders without having multiple git repo copies, like so:"
+    echo "    mkdir ~/gitwebby-refs"
+    echo "    ln -s ~/repos ~/gitwebby-refs/repos"
+    echo "    ln -s ~/shared-repos ~/gitwebby-refs/shared-repos"
+    echo "    bin/gitwebbyupd --proj=1 ~/gitwebby-refs ~/www/gitwebby"
+    exit 0;
+fi
+
+
+valid=1
+if [[ ! -d "$rpd" ]]; then
+    valid=0
+fi
+if [[ ! -d "$upd" ]]; then
+    valid=0
+fi
+if [[ $valid -eq 0 ]]; then
+    echo "Error: invalid directories specified." 1>&2
+    echo "Standard Usage:"
+    echo "    # Directory Structure:"
+    echo "    #   repos_dir/X/.git"
+    echo "    #   repos_dir/Y/.git"
+    echo "    bin/gitwebbyupd repos_dir deploy_dir"
+    echo "Project Usage:"
+    echo "    # 1 Project Directory Structure:"
+    echo "    #   proj_dir/projA/repos_dir/X/.git"
+    echo "    #   proj_dir/projA/repos_dir/Y/.git"
+    echo "    #   proj_dir/projB/repos_dir/X/.git"
+    echo "    #   proj_dir/projB/repos_dir/Y/.git"
+    echo "    bin/gitwebbyupd --proj=1 proj_dir deploy_dir"
+    echo "    # 2 Project Directory Structure:"
+    echo "    #   platf_dir/platfA/projA/repos_dir/X/.git"
+    echo "    #   platf_dir/platfA/projA/repos_dir/Y/.git"
+    echo "    #   platf_dir/platfA/projB/repos_dir/X/.git"
+    echo "    #   platf_dir/platfA/projB/repos_dir/Y/.git"
+    echo "    #   platf_dir/platfB/projA/repos_dir/X/.git"
+    echo "    #   platf_dir/platfB/projA/repos_dir/Y/.git"
+    echo "    #   platf_dir/platfB/projB/repos_dir/X/.git"
+    echo "    #   platf_dir/platfB/projB/repos_dir/Y/.git"
+    echo "    bin/gitwebbyupd --proj=2 platf_dir deploy_dir"
+    exit 1;
+fi
+
+cd "${upd}" 1>>/dev/null
+upd=$(pwd)
+cd - 1>>/dev/null
+dotdir="${upd}/.gitwebby"
+datdir="${upd}/data"
+
+mkdir -p "$dotdir"
+mkdir -p "$datdir"
+echo >"${dotdir}/repos.txt"
+
+
+
+cd "${rpd}"
+lst=$(ls -d */)
+
+i=0
+while [ $i -le $n ];
+do
+    oldlst="$lst"
+    lst=""
+    for d in `echo "$oldlst"`;
+    do
+        #pwd
+	cd "$d" 1>>/dev/null 2>>/dev/null
+	if [[ $i -eq $n ]]; then
+	    fullp=$(pwd)
+            if [[ ! -d "${fullp}/.git" ]];then
+       	        cd .. >>/dev/null
+                continue;
+            fi
+            j=$n
+            ((j++))
+            name=$(echo "$fullp" | rev | cut -d'/' -f-$j | rev)
+            readme=$(ls | grep -i readme | head -1)
+            descr=""
+            if [[ -n "$readme" ]]; then
+                line1=$(cat "$readme" | head -1)
+                descr="$line1"
+                md=$(echo "$line1" | grep "^#" | wc -l)
+                if [[ md -gt 0 ]]; then
+                    line2=$(cat "$readme" | head -2 | tail -1)
+                    line3=$(cat "$readme" | head -3 | tail -1)
+                    if [[ "${line2:0:1}" =~ [a-z] ]]; then
+                        descr="$line2"
+                    elif [[ "${line2:0:1}" =~ [A-Z] ]]; then
+                        descr="$line2"
+                    fi
+                    if [[ "${line3:0:1}" =~ [a-z] ]]; then
+                        descr="$line3"
+                    elif [[ "${line3:0:1}" =~ [A-Z] ]]; then
+                        descr="$line3"
+                    fi
+                fi
+                #descr=$(cat "$readme" | grep -v "^#" | grep -v "^[a-z]" | grep -v "^$" | head -1)
+            fi
+            descr=$(echo "$descr")
+            authors=$(git log --pretty=format:"%an" | sort | uniq | sed -z 's/\n/,/g')
+            authlen=${#authors}
+            ((authlen--))
+            authors="${authors:0:$authlen}"
+            mod_date=$(git log --date=iso-strict | grep "^Date:" | sed 's/Date://' | sed 's/ //g' |  head -1)
+            tab=$'\t'
+            echo "${name}${tab}${mod_date}${tab}${authors}${tab}${descr}" >>"${dotdir}/repos.txt"
+            #ls "../" | grep "$d"
+            normname=$(echo "$name" | sed 's/\//__/g')
+	    branches=$(git branch 2>>/dev/null| sed 's/\*//' | sed 's/ //g')
+            echo "$branches" >"${dotdir}/${normname}.b.txt"
+	    for b in `echo "$branches"`;
+            do
+                commits=$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
+                echo "$commits">"${dotdir}/${normname}.${b}.c.txt"
+                #echo "$commits"
+            done
+	else
+	    lst="${lst}
+$(ls -d */)"
+	fi
+	cd .. >>/dev/null
+    done
+    ((i++))
+done
+
+repojs="window.REPOS=["
+oldIfs="$IFS"
+IFS='
+'
+for reporec in `cat "${dotdir}/repos.txt"`;
+do
+    rec=$(echo "$reporec" | sed -z 's/\t/\n/g')
+    repojs="${repojs}{"
+    keys='name
+last_mod
+authors
+descr'
+    i=1
+    for col in `echo "${rec}"`;
+    do
+        key=$(echo "$keys" | head -"${i}" | tail -1)
+        repojs="${repojs}${key}:"
+        repojs="${repojs}'${col}',"
+        ((i++))
+    done
+    repojs="${repojs}},"
+done
+IFS="$oldIfs"
+repojs="${repojs}];"
+echo "$repojs" >"${datdir}/repos.js"
+
+cd "${rtd}"
+
+
+
+
