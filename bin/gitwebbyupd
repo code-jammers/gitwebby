@@ -82,6 +82,11 @@ fi
 cd "${upd}" 1>>/dev/null
 upd=$(pwd)
 cd - 1>>/dev/null
+
+cd "${rpd}" 1>>/dev/null
+rpd=$(pwd)
+cd - 1>>/dev/null
+
 dotdir="${upd}/.gitwebby"
 datdir="${upd}/data"
 
@@ -92,21 +97,43 @@ echo >"${dotdir}/repos.txt"
 
 
 cd "${rpd}"
-lst=$(ls -d */)
+#lst=$(ls -d */)
+nlst=""
+for item in `ls -d */`;
+do
+    nl=$'\n'
+    thisdir=$(pwd)
+    nlst="${thisdir}/${newlst}${nl}"
+done
+lst="$nlst"
+
 
 i=0
-while [ $i -le $n ];
+curr="${rpd%/}"
+np1=$((n+1))
+while [ $i -le $np1 ];
 do
     oldlst="$lst"
     lst=""
-    for d in `echo "$oldlst"`;
+    for dir in `echo "$oldlst"`;
     do
+        d="${dir}" #"${curr%/}/${dir}"
+        echo "$d"
         #pwd
 	cd "$d" 1>>/dev/null 2>>/dev/null
-	if [[ $i -eq $n ]]; then
+        if [[ $? -gt 0 ]]; then
+            echo "$d"
+            echo "error"
+            exit 1;
+        fi
+        curr="${d}"
+	if [[ $i -eq $np1 ]]; then
+            #echo "${i} = ${n}"
 	    fullp=$(pwd)
+            #echo "$fullp"
             if [[ ! -d "${fullp}/.git" ]];then
        	        cd .. >>/dev/null
+                curr=$(pwd)
                 continue;
             fi
             j=$n
@@ -153,10 +180,21 @@ do
                 #echo "$commits"
             done
 	else
+            newlst=""
+            for item in `ls -d */`;
+            do
+                nl=$'\n'
+                newlst="${newlst}${nl}${curr%/}/${item}"
+            done
+#             read -r -d '' lst <<EOF
+# ${lst}
+# $(ls -d */ | sed "s/^/^${curr}/")
+# EOF
 	    lst="${lst}
-$(ls -d */)"
+${newlst}"
 	fi
 	cd .. >>/dev/null
+        curr=$(pwd)
     done
     ((i++))
 done
