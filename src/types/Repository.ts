@@ -3,4 +3,5 @@ export interface Repository {
   descr: string;
   last_mod: Date;
   name: string;
+  normname: string;
 }
