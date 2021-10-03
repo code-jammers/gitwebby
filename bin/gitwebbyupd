@@ -239,7 +239,7 @@ descr'
     for b in `cat "${dotdir}/${normname}.b.txt"`;
     do
 	rjs="${rjs}'${b}',"
-	cjs="if (window.COMMITS==null)window.COMMITS={};window.COMMITS['${normname}]=["  #commits js
+	cjs="if (window.COMMITS==null)window.COMMITS={};window.COMMITS['${normname}']=["  #commits js
 	for c in `cat "${dotdir}/${normname}.${b}.c.txt"`;
 	do
 	    ti=0
