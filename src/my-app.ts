@@ -20,7 +20,11 @@ export class MyAppElement extends LitElement {
   async firstUpdated() {
     await import('../data/repos.js');
     await import('../data/branches.js');
-    this.repositories = JSON.parse(JSON.stringify(REPOS)).map(repo => ({ ...repo, authors: repo.authors.split(',') , normname: repo.name.replaceAll("/","__") }));
+    this.repositories = JSON.parse(JSON.stringify(REPOS)).map(repo => ({
+      ...repo,
+      authors: repo.authors.split(','),
+      normname: repo.name.replaceAll('/', '__'),
+    }));
     this.branches = Object.entries(JSON.parse(JSON.stringify(BRANCHES))).map((b: any) => ({ repo: b[0], main: b[1].main, branches: b[1].branches }));
     console.log('repositories', this.repositories);
     console.log('branches', this.branches);

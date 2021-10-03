@@ -1,10 +1,15 @@
-import dayjs from 'dayjs/esm';
-import { css, customElement, html, LitElement, property, state } from 'lit-element';
-import allStyles from '../styles/all-styles';
+import { css, customElement, html, LitElement, property } from 'lit-element';
 import { Repository } from '../types/Repository';
+
+import dayjs from 'dayjs/esm';
+import allStyles from '../styles/all-styles';
+import loadScript from '../services/script-loader';
 
 import '@material/mwc-select';
 import '@material/mwc-list/mwc-list-item';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare let COMMITS: any;
 
 @customElement('git-repository')
 export default class GitRepositoryElement extends LitElement {
@@ -44,21 +49,26 @@ export default class GitRepositoryElement extends LitElement {
       }
     `,
   ];
-  async loadjs(jsname) {
-    await import('../../data/'+jsname);
-  }
+
   render() {
     return html`
+      <script src="${this.repository?.normname + '.' + this.selectedBranch + '.commits.js'}"></script>
       <header>
         <h3>${this.repository?.name}</h3>
         <mwc-select
           outlined
           label="Branch"
           .value=${this.selectedBranch ?? ''}
-          @change=${event => {
+          @change=${async event => {
             this.selectedBranch = event.target.value;
-            this.loadjs(this.repository?.normname+"."+this.selectedBranch+".commits.js");
-	    this.repository.last_mod = window.COMMITS[this.repository?.normname].timestamp;
+            try {
+              await loadScript(`/data/${this.repository?.normname}.${this.selectedBranch}.commits.js`);
+              if (this.repository) {
+                this.repository.last_mod = COMMITS[this.repository?.normname].timestamp;
+              }
+            } catch (error) {
+              console.error(error);
+            }
           }}
         >
           ${this.branches?.map((branch: string) => html` <mwc-list-item value=${branch}><span>${branch}</span> </mwc-list-item> `)}
