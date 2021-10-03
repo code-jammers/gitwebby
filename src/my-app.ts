@@ -1,15 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { css, customElement, html, LitElement, state } from 'lit-element';
-import { ChangePathEvent, PendingStateEvent, SiteErrorEvent } from './events';
+import { PendingStateEvent, SiteErrorEvent } from './events';
 import navaid from 'navaid';
+import './components/git-toolbar';
+import { Repository } from './types/Repository';
+import { Branch } from './types/Branch';
+import allStyles from './styles/all-styles';
+
+declare let REPOS: any;
+declare let BRANCHES: any;
 
 @customElement('my-app')
 export class MyAppElement extends LitElement {
   @state() private page: string | undefined;
+  @state() private repositories: Array<Repository> = [];
+  @state() private branches: Array<Branch> = [];
+  @state() private repository: Repository | null;
 
   async firstUpdated() {
-    this.addEventListener(ChangePathEvent.eventName, (event: ChangePathEvent) => {
-      this.#changePage(event.detail.path);
-    });
+    await import('../data/repos.js');
+    await import('../data/branches.js');
+    this.repositories = JSON.parse(JSON.stringify(REPOS)).map(repo => ({ ...repo, authors: repo.authors.split(',') }));
+    this.branches = Object.entries(JSON.parse(JSON.stringify(BRANCHES))).map((b: any) => ({ repo: b[0], main: b[1].main, branches: b[1].branches }));
+    console.log('repositories', this.repositories);
+    console.log('branches', this.branches);
 
     this.addEventListener(SiteErrorEvent.eventName, () => {
       this.#changePage('error');
@@ -18,11 +32,21 @@ export class MyAppElement extends LitElement {
     const router = navaid();
 
     router.on('/', () => {
-      this.#changePage('');
+      window.location.href = '/repositories';
     });
 
-    router.on('/commits', () => {
-      this.#changePage('commits');
+    router.on('/repositories', () => {
+      this.#changePage('repositories', () => import('./components/git-repositories.js'));
+    });
+
+    router.on('/repository/:name', ctx => {
+      const repositoryName = ctx?.name;
+      this.repository = this.repositories.find(repo => repo.name === repositoryName) ?? null;
+      this.#changePage('repository', () => import('./components/git-repository.js'));
+    });
+
+    router.on('/branches', () => {
+      this.#changePage('branches', () => import('./components/git-branches.js'));
     });
 
     router.listen();
@@ -53,11 +77,20 @@ export class MyAppElement extends LitElement {
   }
 
   static styles = [
+    ...allStyles,
     css`
       :host {
         display: flex;
         flex-direction: column;
-        --app-primary-color: #ff4438;
+        --app-primary-color: #9b4dca;
+        --app-light-text-color: #606c76;
+      }
+
+      .wrapper {
+        display: block;
+        overflow: hidden;
+        position: relative;
+        width: 100%;
       }
 
       [hidden] {
@@ -67,6 +100,19 @@ export class MyAppElement extends LitElement {
   ];
 
   render() {
-    return html` Web components go here ${this.page}`;
+    return html`
+      <git-toolbar .selectedPage=${this.page ?? ''}></git-toolbar>
+      <main class="wrapper">
+        <git-repositories .repositories=${this.repositories} ?hidden=${this.page !== 'repositories'} ?active=${this.page === 'repositories'}></git-repositories>
+        <git-repository
+          .branches=${this.branches.find(b => b.repo === this.repository?.name)?.branches ?? []}
+          .selectedBranch=${this.branches.find(b => b.repo === this.repository?.name)?.main ?? null}
+          .repository=${this.repository}
+          ?hidden=${this.page !== 'repository'}
+          ?active=${this.page === 'repository'}
+        ></git-repository>
+        <git-branches .branches=${this.branches} ?hidden=${this.page !== 'branches'} ?active=${this.page === 'branches'}></git-branches>
+      </main>
+    `;
   }
 }
