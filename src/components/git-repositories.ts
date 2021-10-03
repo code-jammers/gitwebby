@@ -92,7 +92,7 @@ export default class GitRepositoriesElement extends LitElement {
               <td title=${repository.last_mod ? dayjs(repository.last_mod) : ''}>${dayjs(repository.last_mod).format('MM/DD/YYYY')}</td>
               <td title=${repository.authors ? repository.authors?.join(', ') : ''}>${repository.authors?.length} Authors</td>
               <td>
-                <a href="/repository/${repository.name}"><mwc-button outlined>Browse</mwc-button></a>
+                <a href="/repository/${repository.normname}"><mwc-button outlined>Browse</mwc-button></a>
               </td>
             </tr>
           `

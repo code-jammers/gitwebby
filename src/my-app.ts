@@ -20,7 +20,7 @@ export class MyAppElement extends LitElement {
   async firstUpdated() {
     await import('../data/repos.js');
     await import('../data/branches.js');
-    this.repositories = JSON.parse(JSON.stringify(REPOS)).map(repo => ({ ...repo, authors: repo.authors.split(',') }));
+    this.repositories = JSON.parse(JSON.stringify(REPOS)).map(repo => ({ ...repo, authors: repo.authors.split(',') , normname: repo.name.replaceAll("/","__") }));
     this.branches = Object.entries(JSON.parse(JSON.stringify(BRANCHES))).map((b: any) => ({ repo: b[0], main: b[1].main, branches: b[1].branches }));
     console.log('repositories', this.repositories);
     console.log('branches', this.branches);
@@ -41,7 +41,7 @@ export class MyAppElement extends LitElement {
 
     router.on('/repository/:name', ctx => {
       const repositoryName = ctx?.name;
-      this.repository = this.repositories.find(repo => repo.name === repositoryName) ?? null;
+      this.repository = this.repositories.find(repo => repo.normname === repositoryName) ?? null;
       this.#changePage('repository', () => import('./components/git-repository.js'));
     });
 
@@ -105,8 +105,8 @@ export class MyAppElement extends LitElement {
       <main class="wrapper">
         <git-repositories .repositories=${this.repositories} ?hidden=${this.page !== 'repositories'} ?active=${this.page === 'repositories'}></git-repositories>
         <git-repository
-          .branches=${this.branches.find(b => b.repo === this.repository?.name)?.branches ?? []}
-          .selectedBranch=${this.branches.find(b => b.repo === this.repository?.name)?.main ?? null}
+          .branches=${this.branches.find(b => b.repo === this.repository?.normname)?.branches ?? []}
+          .selectedBranch=${this.branches.find(b => b.repo === this.repository?.normname)?.main ?? null}
           .repository=${this.repository}
           ?hidden=${this.page !== 'repository'}
           ?active=${this.page === 'repository'}
