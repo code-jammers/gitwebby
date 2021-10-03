@@ -44,6 +44,9 @@ export default class GitRepositoryElement extends LitElement {
       }
     `,
   ];
+  async loadjs(jsname) {
+    await import('../../data/'+jsname);
+  }
   render() {
     return html`
       <header>
@@ -54,6 +57,8 @@ export default class GitRepositoryElement extends LitElement {
           .value=${this.selectedBranch ?? ''}
           @change=${event => {
             this.selectedBranch = event.target.value;
+            this.loadjs(this.repository?.normname+"."+this.selectedBranch+".commits.js");
+	    this.repository.last_mod = window.COMMITS[this.repository?.normname].timestamp;
           }}
         >
           ${this.branches?.map((branch: string) => html` <mwc-list-item value=${branch}><span>${branch}</span> </mwc-list-item> `)}
