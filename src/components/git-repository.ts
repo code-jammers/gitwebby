@@ -53,7 +53,6 @@ export default class GitRepositoryElement extends LitElement {
 
   render() {
     return html`
-      <script src="${this.repository?.normname + '.' + this.selectedBranch + '.commits.js'}"></script>
       <header>
         <h3>${this.repository?.name}</h3>
         <mwc-select
