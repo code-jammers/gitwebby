@@ -64,7 +64,8 @@ export default class GitRepositoryElement extends LitElement {
             try {
               await loadScript(`/data/${this.repository?.normname}.${this.selectedBranch}.commits.js`);
               if (this.repository) {
-                this.repository.last_mod = COMMITS[this.repository?.normname].timestamp;
+                this.repository.last_mod = window.COMMITS[this.repository?.normname][0].timestamp;
+		console.log(window.COMMITS[this.repository?.normname][0].timestamp);
               }
             } catch (error) {
               console.error(error);

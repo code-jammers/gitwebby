@@ -177,13 +177,14 @@ do
             echo "${name}${tab}${mod_date}${tab}${authors}${tab}${descr}" >>"${dotdir}/repos.txt"
             #ls "../" | grep "$d"
             normname=$(echo "$name" | sed 's/\//__/g')
-	    branches=$(git branch 2>>/dev/null| sed 's/\*//' | sed 's/ //g')
+	    branches=$(git branch --all 2>>/dev/null| sed 's/remotes\/origin\///g' | grep -v "\->" | sed 's/\*//' | sed 's/ //g' | sed "s/'//g" | sort | uniq)
 	    mbranch=$(git rev-parse --abbrev-ref HEAD)
 	    echo "$mbranch" >"${dotdir}/${normname}.m.txt"
             echo "$branches" >"${dotdir}/${normname}.b.txt"
 	    for b in `echo "$branches"`;
             do
-                commits=$(git log main --pretty=format:"%H$tab%an$tab%aI$tab%s") #$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
+		remote=$(git remote| head -1)
+                commits=$(git log "${remote}/${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s" | sed "s/'//g") #$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
                 echo "$commits">"${dotdir}/${normname}.${b}.c.txt"
                 #echo "$commits"
             done
