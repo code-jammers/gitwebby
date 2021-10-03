@@ -6,6 +6,7 @@ import './components/git-toolbar';
 import { Repository } from './types/Repository';
 import { Branch } from './types/Branch';
 import allStyles from './styles/all-styles';
+import appEvents from './services/app-events';
 
 declare let REPOS: any;
 declare let BRANCHES: any;
@@ -31,6 +32,17 @@ export class MyAppElement extends LitElement {
 
     this.addEventListener(SiteErrorEvent.eventName, () => {
       this.#changePage('error');
+    });
+
+    appEvents.subscribe('Repository', 'Update', (repository: Repository) => {
+      this.repositories = [
+        ...(this.repositories.splice(
+          this.repositories.findIndex(r => r.name === repository.name),
+          1,
+          repository
+        ) as any),
+      ];
+      this.repository = JSON.parse(JSON.stringify(repository));
     });
 
     const router = navaid();

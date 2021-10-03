@@ -4,6 +4,7 @@ import { Repository } from '../types/Repository';
 import dayjs from 'dayjs/esm';
 import allStyles from '../styles/all-styles';
 import loadScript from '../services/script-loader';
+import appEvents from '../services/app-events';
 
 import '@material/mwc-select';
 import '@material/mwc-list/mwc-list-item';
@@ -64,8 +65,11 @@ export default class GitRepositoryElement extends LitElement {
             try {
               await loadScript(`/data/${this.repository?.normname}.${this.selectedBranch}.commits.js`);
               if (this.repository) {
-                this.repository.last_mod = window.COMMITS[this.repository?.normname][0].timestamp;
-		console.log(window.COMMITS[this.repository?.normname][0].timestamp);
+                const repository = {
+                  ...this.repository,
+                  last_mod: COMMITS[this.repository?.normname][0].timestamp,
+                };
+                appEvents.dispatch('Repository', 'Update', repository);
               }
             } catch (error) {
               console.error(error);
