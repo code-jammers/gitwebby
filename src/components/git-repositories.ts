@@ -24,6 +24,8 @@ export default class GitRepositoriesElement extends LitElement {
       :host {
         display: block;
         padding: 24px;
+        max-width: var(--app-max-width);
+        margin: 0 auto;
       }
 
       th,

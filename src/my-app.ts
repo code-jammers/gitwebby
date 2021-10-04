@@ -100,6 +100,9 @@ export class MyAppElement extends LitElement {
         flex-direction: column;
         --app-primary-color: #9b4dca;
         --app-light-text-color: #606c76;
+        --app-border-color: #767676;
+        --app-hover-color: #f5f5f5;
+        --app-max-width: 1400px;
       }
 
       .wrapper {
@@ -107,6 +110,7 @@ export class MyAppElement extends LitElement {
         overflow: hidden;
         position: relative;
         width: 100%;
+        height: calc(100vh - 51px);
       }
 
       [hidden] {
