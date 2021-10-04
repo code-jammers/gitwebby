@@ -27,7 +27,6 @@ export default class GitRepositoryElement extends LitElement {
     if (changedProps.has('repository')) {
       if (this.repository?.normname) {
         this.commits = COMMITS[this.repository?.normname] ?? [];
-        console.log(this.commits);
       }
     }
   }
