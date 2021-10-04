@@ -3,6 +3,7 @@
   "dependencies": {
     "@material/mwc-button": "^0.25.1",
     "@material/mwc-circular-progress-four-color": "^0.25.1",
+    "@material/mwc-icon": "^0.25.1",
     "@material/mwc-icon-button": "^0.25.1",
     "@material/mwc-list": "^0.25.1",
     "@material/mwc-select": "^0.25.1",
