@@ -2,6 +2,10 @@
 
 # GitWebby update script
 
+# obtain script path
+pth="$(pwd)";cd $(dirname "$0");
+script="$(pwd)";cd $pth;
+
 rtd=$(pwd)    # return directory
 n=0
 if [[ "${1:0:7}" = "--proj=" ]]; then
@@ -186,6 +190,55 @@ do
 		remote=$(git remote| head -1)
                 commits=$(git log "${remote}/${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s" | sed "s/'//g") #$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
                 echo "$commits">"${dotdir}/${normname}.${b}.c.txt"
+		#echo "$commits"
+		#exit 1
+                tab=$'\t'
+		oIfs="$IFS"
+		IFS=$'\n'
+		for cmmt in `echo "$commits"`;
+		do
+		    c=$(echo "$cmmt" | cut -d "$tab" -f 1)
+		    files=$(git show --pretty="format:" --name-only $c)
+                    echo >"${dotdir}/c_${c}.cmmtmanifest.txt"
+		    
+		    index=$(git ls-tree -r $c | cut -d ' ' -f 3-4)
+                    echo "$index" >"${dotdir}/c_${c}.snapmanifest.txt"
+                    #don't need to normalize here
+		    # normindex=""
+		    # for ind in `echo "$index"`;
+		    # do
+
+		    # 	#norm=$(echo "$ind" | cut -d "$tab" -f 2)
+		    # 	#norm2=$(echo "$norm" | sed 's/ /--/g' | sed 's/\//__/g')
+			
+		    # 	#echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
+		    # 	echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
+		    # done
+		    git show $c | "${script}/gitwebbyupd_filediff" "$dotdir" $c
+
+		    for f in `echo "$files"`;
+		    do
+			fhash=$(git rev-parse "${c}:${f}" 2>/dev/null)
+			git rev-parse "${c}:${f}" 2>/dev/null
+                        err=$?
+			if [[ err -gt 0 ]]; then
+			    # file was deleted in this commit
+			    echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			    continue
+			fi
+			err=$(echo "$fhash" | grep ":" | wc -l)
+			if [[ err -gt 0 ]]; then
+			    # file was deleted in this commit
+			    echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			    continue
+			fi
+			content=$(git show "${c}:${f}" | cat)
+
+			echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			echo "$content" >"${dotdir}/f_${fhash}.txt"
+		    done
+		done
+		IFS="$oIfs"
                 #echo "$commits"
             done
 	else

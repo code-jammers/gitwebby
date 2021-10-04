@@ -1,0 +1,3 @@
+#!/bin/bash
+
+#TODO: create diff files, ie: c_<COMMIT_HASH>.f_<FILE_HASH>.txt
