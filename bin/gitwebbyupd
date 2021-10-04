@@ -214,28 +214,31 @@ do
 		    # 	#echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
 		    # 	echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
 		    # done
-		    git show $c | "${script}/gitwebbyupd_filediff" "$dotdir" $c
+		    git show $c | cat | "${script}/gitwebbyupd_filediff" "$dotdir" $c
 
 		    for f in `echo "$files"`;
 		    do
 			fhash=$(git rev-parse "${c}:${f}" 2>/dev/null)
 			git rev-parse "${c}:${f}" 2>/dev/null
-                        err=$?
+			err=$?
 			if [[ err -gt 0 ]]; then
 			    # file was deleted in this commit
 			    echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
 			    continue
 			fi
-			err=$(echo "$fhash" | grep ":" | wc -l)
-			if [[ err -gt 0 ]]; then
-			    # file was deleted in this commit
-			    echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
-			    continue
-			fi
-			content=$(git show "${c}:${f}" | cat)
+                        fhash=$(echo "$fhash" | cut -d ':' -f 1)
+			#err=$(echo "$fhash" | grep ":" | wc -l)
+			# if [[ err -gt 0 ]]; then
+			#     # file was deleted in this commit
+			#     echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			#     continue
+			# fi
+			content=$(git show "${c}:${f}" | tr -d '\0' | cat)
 
 			echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			esc_content=$(echo "$content" | sed 's/`/\\`/g')
 			echo "$content" >"${dotdir}/f_${fhash}.txt"
+			echo "if(window.FILES==null){window.FILES=[];}window.FILES['${fhash}'=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
 		    done
 		done
 		IFS="$oIfs"
