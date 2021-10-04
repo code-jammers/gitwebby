@@ -200,6 +200,7 @@ do
 		    c=$(echo "$cmmt" | cut -d "$tab" -f 1)
 		    files=$(git show --pretty="format:" --name-only $c)
                     echo >"${dotdir}/c_${c}.cmmtmanifest.txt"
+		    echo "if (window.CMMT_MANIF==null)window.CMMT_MANIF={};window.CMMT_MANIF['${c}']=[];" >"${datdir}/c_${c}.cmmtmanifest.js"
 		    
 		    index=$(git ls-tree -r $c | cut -d ' ' -f 3-4)
                     echo "$index" >"${dotdir}/c_${c}.snapmanifest.txt"
@@ -234,11 +235,11 @@ do
 			#     continue
 			# fi
 			content=$(git show "${c}:${f}" | tr -d '\0' | cat)
-
 			echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
 			esc_content=$(echo "$content" | sed 's/`/\\`/g')
 			echo "$content" >"${dotdir}/f_${fhash}.txt"
-			echo "if(window.FILES==null){window.FILES=[];}window.FILES['${fhash}'=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
+			echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
 		    done
 		done
 		IFS="$oIfs"
