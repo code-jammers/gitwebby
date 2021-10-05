@@ -227,7 +227,7 @@ do
 		    # 	#echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
 		    # 	echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
 		    # done
-		    git show $c | cat | "${script}/gitwebbyupd_filediff" "$dotdir" $c
+		    git show $c | cat | . "${script}/gitwebbyupd_filediff" "$dotdir" "$datdir" $c "$files"
 
 		    for f in `echo "$files"`;
 		    do

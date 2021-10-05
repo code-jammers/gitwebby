@@ -1,3 +1,95 @@
 #!/bin/bash
 
-#TODO: create diff files, ie: c_<COMMIT_HASH>.f_<FILE_HASH>.txt
+# create diff files, ie: dc_<COMMIT_HASH>.df_<norm-filename>.txt
+#                        dc=>diff commit  df=>diff file
+dotdir="$1"
+datdir="$2"
+cmmt="$3"
+#files="$4"
+
+txt=$(cat)
+
+nl=$'\n'
+tab=$'\t'
+
+# fhash_lookup=""
+# for f in `echo "$files"`;
+# do
+#     #git rev-parse "${c}:${f}" 2>/dev/null
+#     fhash=$(git rev-parse "${c}:${f}" 2>/dev/null)
+#     err=$?
+#     if [[ err -gt 0 ]]; then
+# 	# file was deleted in this commit
+# 	continue
+#     fi
+#     fhash=$(echo "$fhash" | cut -d ':' -f 1)
+#     fhash_lookup="${fhash}${tab}${f}"
+# done
+
+i=0
+len=${#txt}
+# echo $i
+# echo $len
+while [[ $i -lt $len ]]
+do
+    if [[ "${txt:$i:5}" = "diff " ]]; then
+	break
+    fi
+    ((i++))
+done
+
+((i--))
+fp=""
+while [ $i -lt $len ]
+do
+    if [[ "${txt:$i:5}" = "diff " ]]; then
+	j=$i
+	c="${txt:$j:1}"
+	while [ ! "$c" = "$nl" ];
+	do
+	    c="${txt:$j:1}"
+	    ((j++))
+	    if [[ $j -ge $len ]]; then
+		break
+	    fi
+	done
+	# echo "j..$j"
+	j=$((j-i))
+	line="${txt:$i:$j}"
+	fp=$(echo "$line" | cut -d ' ' -f 4 | sed 's/b\///')
+	i=$((i+j))
+	c="${txt:$i:1}"
+
+	nlskip=3
+	nlcount=0
+	while [ $i -lt $len ]
+	do
+	    c="${txt:$i:1}"
+	    if [[ "$c" = "$nl" ]]; then
+		((nlcount++))
+	    fi
+	    if [[ $nlcount -eq $nlskip ]]; then
+		break
+	    fi
+	    ((i++))
+	done
+	j=1
+	while [ $j -lt $len ]
+	do
+	    k=$((j+i))
+	    if [[ "${txt:$k:3}" = "${nl}@@" ]]; then
+		break
+	    fi
+	    ((j++))
+	done
+	diff_content="${txt:$i:$j}"
+	normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g')
+	echo "$diff_content" >"${dotdir}/dc_${cmmt}.df_${normnm}.txt"
+        #echo "${diff_content}${nl}=============${nl}"
+	i=$((i+j))
+	((i--))
+    fi
+    ((i++));
+done
+exit 1
+
