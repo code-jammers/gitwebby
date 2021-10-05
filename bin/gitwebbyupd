@@ -188,7 +188,12 @@ do
 	    for b in `echo "$branches"`;
             do
 		remote=$(git remote| head -1)
-                commits=$(git log "${remote}/${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s" | sed "s/'//g") #$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
+		if [[ -n "$remote" ]]; then
+		    remote="${remote}/"
+		else
+		    remote=""
+		fi
+                commits=$(git log "${remote}${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s" | sed "s/'//g") #$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
                 echo "$commits">"${dotdir}/${normname}.${b}.c.txt"
 		#echo "$commits"
 		#exit 1
@@ -243,9 +248,25 @@ do
 			# fi
 			content=$(git show "${c}:${f}" | tr -d '\0' | cat)
 			echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			#exit 1
 			echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
 			esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/${/\\${/g')
 			echo "$content" >"${dotdir}/f_${fhash}.txt"
+			ftype=$(file "${dotdir}/f_${fhash}.txt"| cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
+			ff=""  # ftype filtered
+			ff="$ff"$(echo "$ftype" | grep "MIDI")
+                        ff="$ff"$(echo "$ftype" | grep "MPEG")
+			ff="$ff"$(echo "$ftype" | grep "XCF")
+			ff="$ff"$(echo "$ftype" | grep "GIF")
+			if [[ "$ftype" = "data" ]]; then
+			    # overwrite contents with file type
+			    echo "file content ommitted for file type: <${ftype}>" >"${dotdir}/f_${fhash}.txt"
+			fi
+                        if [[ -n "$ff" ]]; then
+			    # overwrite contents with file type
+			    echo "file content ommitted for file type: <${ff}>" >"${dotdir}/f_${fhash}.txt"
+			fi
+			
 			echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
 		    done
 		done
