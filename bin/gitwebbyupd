@@ -204,6 +204,13 @@ do
 		    
 		    index=$(git ls-tree -r $c | cut -d ' ' -f 3-4)
                     echo "$index" >"${dotdir}/c_${c}.snapmanifest.txt"
+		    echo "if (window.SNAP_MANIF==null)window.SNAP_MANIF={};window.SNAP_MANIF['${c}']=[];" >"${datdir}/c_${c}.snapmanifest.js"
+		    for frec in `echo "$index"`;
+		    do
+			fhash=$(echo "$frec" | cut -d "${tab}" -f 1)
+			f=$(echo "$frec" | cut -d "${tab}" -f 2)
+			echo "window.SNAP_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.snapmanifest.js"
+		    done
                     #don't need to normalize here
 		    # normindex=""
 		    # for ind in `echo "$index"`;
@@ -219,8 +226,8 @@ do
 
 		    for f in `echo "$files"`;
 		    do
+			#git rev-parse "${c}:${f}" 2>/dev/null
 			fhash=$(git rev-parse "${c}:${f}" 2>/dev/null)
-			git rev-parse "${c}:${f}" 2>/dev/null
 			err=$?
 			if [[ err -gt 0 ]]; then
 			    # file was deleted in this commit
@@ -237,7 +244,7 @@ do
 			content=$(git show "${c}:${f}" | tr -d '\0' | cat)
 			echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
 			echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
-			esc_content=$(echo "$content" | sed 's/`/\\`/g')
+			esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/${/\\${/g')
 			echo "$content" >"${dotdir}/f_${fhash}.txt"
 			echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
 		    done
