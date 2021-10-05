@@ -185,6 +185,7 @@ do
 	    mbranch=$(git rev-parse --abbrev-ref HEAD)
 	    echo "$mbranch" >"${dotdir}/${normname}.m.txt"
             echo "$branches" >"${dotdir}/${normname}.b.txt"
+	    #echo "... branches"
 	    for b in `echo "$branches"`;
             do
 		remote=$(git remote| head -1)
@@ -200,16 +201,18 @@ do
                 tab=$'\t'
 		oIfs="$IFS"
 		IFS=$'\n'
+		# echo "... ... commits"
 		for cmmt in `echo "$commits"`;
 		do
 		    c=$(echo "$cmmt" | cut -d "$tab" -f 1)
 		    files=$(git show --pretty="format:" --name-only $c)
-                    echo >"${dotdir}/c_${c}.cmmtmanifest.txt"
+                    # PERF_OPTIMIZE echo >"${dotdir}/c_${c}.cmmtmanifest.txt"
 		    echo "if (window.CMMT_MANIF==null)window.CMMT_MANIF={};window.CMMT_MANIF['${c}']=[];" >"${datdir}/c_${c}.cmmtmanifest.js"
 		    
 		    index=$(git ls-tree -r $c | cut -d ' ' -f 3-4)
                     echo "$index" >"${dotdir}/c_${c}.snapmanifest.txt"
 		    echo "if (window.SNAP_MANIF==null)window.SNAP_MANIF={};window.SNAP_MANIF['${c}']=[];" >"${datdir}/c_${c}.snapmanifest.js"
+		    # echo "... ... ... index"
 		    for frec in `echo "$index"`;
 		    do
 			fhash=$(echo "$frec" | cut -d "${tab}" -f 1)
@@ -227,8 +230,9 @@ do
 		    # 	#echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
 		    # 	echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
 		    # done
-		    git show $c | cat | . "${script}/gitwebbyupd_filediff" "$dotdir" "$datdir" $c "$files"
-
+		    # echo "... ... ... filediff"
+		    git show --unified=0 $c | cat | . "${script}/gitwebbyupd_filediff" "$dotdir" "$datdir" $c  # PERF_OPTIMIZE show no context
+		    # echo "... ... ... files"
 		    for f in `echo "$files"`;
 		    do
 			#git rev-parse "${c}:${f}" 2>/dev/null
@@ -236,7 +240,7 @@ do
 			err=$?
 			if [[ err -gt 0 ]]; then
 			    # file was deleted in this commit
-			    echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			    # PERF_OPTIMIZE echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
 			    continue
 			fi
                         fhash=$(echo "$fhash" | cut -d ':' -f 1)
@@ -247,7 +251,7 @@ do
 			#     continue
 			# fi
 			content=$(git show "${c}:${f}" | tr -d '\0' | cat)
-			echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			# PERF_OPTIMIZE echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
 			#exit 1
 			echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
 			esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/${/\\${/g')

@@ -12,6 +12,8 @@ txt=$(cat)
 nl=$'\n'
 tab=$'\t'
 
+hdr="if (window.DIFFS==null){window.DIFFS={};}window.DIFFS["
+
 # fhash_lookup=""
 # for f in `echo "$files"`;
 # do
@@ -25,7 +27,7 @@ tab=$'\t'
 #     fhash=$(echo "$fhash" | cut -d ':' -f 1)
 #     fhash_lookup="${fhash}${tab}${f}"
 # done
-
+# echo "... ... ... filediff skiplead"
 i=0
 len=${#txt}
 # echo $i
@@ -37,7 +39,7 @@ do
     fi
     ((i++))
 done
-
+# echo "... ... ... ... it-chars"
 ((i--))
 fp=""
 while [ $i -lt $len ]
@@ -45,6 +47,7 @@ do
     if [[ "${txt:$i:5}" = "diff " ]]; then
 	j=$i
 	c="${txt:$j:1}"
+	# echo "... ... ... ... ... getln"
 	while [ ! "$c" = "$nl" ];
 	do
 	    c="${txt:$j:1}"
@@ -62,6 +65,7 @@ do
 
 	nlskip=3
 	nlcount=0
+	# echo "... ... ... ... ... skiplns"
 	while [ $i -lt $len ]
 	do
 	    c="${txt:$i:1}"
@@ -74,6 +78,7 @@ do
 	    ((i++))
 	done
 	j=1
+	# echo "... ... ... ... ... grabtxt"
 	while [ $j -lt $len ]
 	do
 	    k=$((j+i))
@@ -82,14 +87,20 @@ do
 	    fi
 	    ((j++))
 	done
+        # echo "... ... ... ... ... cleantxt"
 	diff_content="${txt:$i:$j}"
-	normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g')
-	echo "$diff_content" >"${dotdir}/dc_${cmmt}.df_${normnm}.txt"
+	normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
+	diff_content_js=$(echo "$diff_content" | sed 's/`/\\`/g' | sed 's/${/\\${/g')
+	# PERF_OPTIMIZE echo "$diff_content" >"${dotdir}/dc_${cmmt}.df_${normnm}.txt"
+	# echo "... ... ... ... ... write-io"
+	fnm="dc_${cmmt}.df_${normnm}"
+	echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
+	#echo "${datdir}/dc_${cmmt}.df_${normnm}.js"
         #echo "${diff_content}${nl}=============${nl}"
 	i=$((i+j))
 	((i--))
     fi
     ((i++));
 done
-exit 1
+
 
