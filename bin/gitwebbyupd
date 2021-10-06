@@ -96,6 +96,8 @@ datdir="${upd}/data"
 
 mkdir -p "$dotdir"
 mkdir -p "$datdir"
+mkdir -p "${dotdir}/lkp"
+mkdir -p "${dotdir}/lkp/dc"
 echo >"${dotdir}/repos.txt"
 
 
@@ -231,7 +233,7 @@ do
 		    # 	echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
 		    # done
 		    # echo "... ... ... filediff"
-		    git show --unified=0 $c | cat | . "${script}/gitwebbyupd_filediff" "$dotdir" "$datdir" $c  # PERF_OPTIMIZE show no context
+		    git show --unified=0 $c >"${dotdir}/lkp/dc/${c}.diff" # | cat | . "${script}/gitwebbyupd_filediff" "$dotdir" "$datdir" $c  # PERF_OPTIMIZE show no context
 		    # echo "... ... ... files"
 		    for f in `echo "$files"`;
 		    do
@@ -363,6 +365,221 @@ repojs="${repojs}];"
 rjs="${rjs}};"
 echo "$repojs" >"${datdir}/repos.js"
 echo "$rjs" >"${datdir}/branches.js"
+
+
+# # PERF_OPTIMIZATION
+# for f in "${dotdir}"/lkp/dc/*.diff;
+# do
+#     # create diff files, ie: dc_<COMMIT_HASH>.df_<norm-filename>.txt
+#     #                        dc=>diff commit  df=>diff file
+#     bnm=$(basename "$f")
+#     cmmt="${bnm%.*}"
+#     #files="$4"
+#     echo "${cmmt}"
+#     # PERF_OPTIMIZE txt=$(cat)
+#     txt=$(cat "$f")
+
+#     nl=$'\n'
+#     tab=$'\t'
+
+#     hdr="if (window.DIFFS==null){window.DIFFS={};}window.DIFFS["
+
+#     i=0
+#     len=${#txt}
+#     while [[ $i -lt $len ]]
+#     do
+# 	if [[ "${txt:$i:5}" = "diff " ]]; then
+# 	    break
+# 	fi
+# 	((i++))
+#     done
+#     # echo "... ... ... ... it-chars"
+#     ((i--))
+#     fp=""
+#     while [ $i -lt $len ]
+#     do
+# 	# echo "... ... ... ... while-it-strt"
+# 	if [[ "${txt:$i:5}" = "diff " ]]; then
+# 	    j=$i
+# 	    c="${txt:$j:1}"
+# 	    # echo "... ... ... ... ... getln"
+# 	    while [ ! "$c" = "$nl" ];
+# 	    do
+# 		c="${txt:$j:1}"
+# 		((j++))
+# 		if [[ $j -ge $len ]]; then
+# 		    break
+# 		fi
+# 	    done
+# 	    # echo "j..$j"
+# 	    j=$((j-i))
+# 	    line="${txt:$i:$j}"
+# 	    fp=$(echo "$line" | cut -d ' ' -f 4 | sed 's/b\///')
+# 	    i=$((i+j))
+# 	    c="${txt:$i:1}"
+# 	    nlskip=3
+# 	    if [[ "${txt:$i:13}" = "new file mode" ]]; then
+# 		((nlskip++))
+# 	    fi
+# 	    nlcount=0
+# 	    # echo "... ... ... ... ... skiplns"
+# 	    while [ $i -lt $len ]
+# 	    do
+# 		c="${txt:$i:1}"
+# 		if [[ "$c" = "$nl" ]]; then
+# 		    ((nlcount++))
+# 		fi
+# 		if [[ $nlcount -eq $nlskip ]]; then
+# 		    break
+# 		fi
+# 		((i++))
+# 	    done
+# 	    j=1
+# 	    # echo "... ... ... ... ... grabtxt"
+# 	    while [ $j -lt $len ]
+# 	    do
+# 		k=$((j+i))
+# 		if [[ "${txt:$k:3}" = "${nl}@@" ]]; then
+# 		    break
+# 		fi
+# 		((j++))
+# 	    done
+#             # echo "... ... ... ... ... cleantxt"
+# 	    diff_content="${txt:$i:$j}"
+# 	    normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
+# 	    diff_content_js=$(echo "$diff_content" | sed 's/`/\\`/g' | sed 's/${/\\${/g')
+# 	    # PERF_OPTIMIZE echo "$diff_content" >"${dotdir}/dc_${cmmt}.df_${normnm}.txt"
+# 	    # echo "... ... ... ... ... write-io"
+# 	    # fnm="dc_${cmmt}.df_${normnm}"
+# 	    echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
+# 	    # echo "${datdir}/dc_${cmmt}.df_${normnm}.js"
+#             # echo "${diff_content}${nl}=============${nl}"
+# 	    i=$((i+j))
+# 	    ((i--))
+# 	fi
+# 	((i++))
+# 	# echo "... ... ... ... while-it-end"
+# 	# continue
+#     done
+# done
+
+# PERF_OPTIMIZATION
+for f in "${dotdir}"/lkp/dc/*.diff;
+do
+    # create diff files, ie: dc_<COMMIT_HASH>.df_<norm-filename>.txt
+    #                        dc=>diff commit  df=>diff file
+    bnm=$(basename "$f")
+    cmmt="${bnm%.*}"
+    #files="$4"
+    echo "${cmmt}"
+    # PERF_OPTIMIZE txt=$(cat)
+    txt=$(cat "$f")
+
+    nl=$'\n'
+    tab=$'\t'
+
+    hdr="if (window.DIFFS==null){window.DIFFS={};}window.DIFFS["
+
+    i=0
+    len=${#txt}
+    while [[ $i -lt $len ]]
+    do
+	if [[ "${txt:$i:5}" = "diff " ]]; then
+	    break
+	fi
+	((i++))
+    done
+    # echo "... ... ... ... it-chars"
+    ((i--))
+    fp=""
+    while [ $i -lt $len ]
+    do
+	# echo "... ... ... ... while-it-strt"
+	if [[ "${txt:$i:5}" = "diff " ]]; then
+	    j=$i
+	    c="${txt:$j:1}"
+	    # echo "... ... ... ... ... getln"
+	    while [ ! "$c" = "$nl" ];
+	    do
+		c="${txt:$j:1}"
+		((j++))
+		if [[ $j -ge $len ]]; then
+		    break
+		fi
+	    done
+	    # echo "j..$j"
+	    j=$((j-i))
+	    line="${txt:$i:$j}"
+	    fp=$(echo "$line" | cut -d ' ' -f 4 | sed 's/b\///')
+	    i=$((i+j))
+	    c="${txt:$i:1}"
+	    nlskip=3
+	    if [[ "${txt:$i:13}" = "new file mode" ]]; then
+		((nlskip++))
+	    fi
+	    nlcount=0
+	    # echo "... ... ... ... ... skiplns"
+	    while [ $i -lt $len ]
+	    do
+		c="${txt:$i:1}"
+		if [[ "${txt:$i:15}" = "Binary files a/" ]]; then
+		    ((i--))
+		    break # nlcount=$((nlskip-1))
+		fi
+		if [[ "$c" = "$nl" ]]; then
+		    ((nlcount++))
+		fi
+		if [[ $nlcount -eq $nlskip ]]; then
+		    break
+		fi
+		((i++))
+	    done
+	    j=1
+	    # echo "... ... ... ... ... grabtxt"
+	    k=$((j+i))
+	    # echo "k test: ${txt:$k:15}"
+	    oneline=0
+	    if [[ "${txt:$k:15}" = "Binary files a/" ]]; then
+		oneline=1
+	    fi
+	    while [ $j -lt $len ]
+	    do
+		k=$((j+i))
+		if [[ $oneline -eq 1 ]]; then
+		    if [[ "${txt:$k:1}" = "${nl}" ]]; then
+			break
+		    fi
+		fi
+		if [[ "${txt:$k:3}" = "${nl}@@" ]]; then
+		    break
+		fi
+		if [[ "${txt:$k:14}" = "${nl}diff --git a/" ]]; then
+		    break
+		fi
+		((j++))
+	    done
+            # echo "... ... ... ... ... cleantxt"
+	    diff_content="${txt:$i:$j}"
+	    
+	    # echo "last line: " $(echo "$diff_content" | tail -1)
+	    normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
+	    diff_content_js=$(echo "$diff_content" | sed 's/`/\\`/g' | sed 's/${/\\${/g')
+	    # PERF_OPTIMIZE echo "$diff_content" >"${dotdir}/dc_${cmmt}.df_${normnm}.txt"
+	    # echo "... ... ... ... ... write-io"
+	    # fnm="dc_${cmmt}.df_${normnm}"
+	    echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
+	    # echo "${datdir}/dc_${cmmt}.df_${normnm}.js"
+            # echo "${diff_content}${nl}=============${nl}"
+	    i=$((i+j))
+	    ((i--))
+	fi
+	((i++))
+	# echo "... ... ... ... while-it-end"
+	# continue
+    done
+done
+
+
 cd "${rtd}"
 
 
