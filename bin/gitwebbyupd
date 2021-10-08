@@ -274,6 +274,7 @@ do
                         ff="$ff"$(echo "$ftype" | grep "MPEG")
 			ff="$ff"$(echo "$ftype" | grep "XCF")
 			ff="$ff"$(echo "$ftype" | grep "GIF")
+			ff="$ff"$(echo "$ftype" | grep "Audio file")
 			overwrite=""
 			if [[ "$ftype" = "data" ]]; then
 			    # overwrite contents with file type
