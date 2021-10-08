@@ -274,16 +274,22 @@ do
                         ff="$ff"$(echo "$ftype" | grep "MPEG")
 			ff="$ff"$(echo "$ftype" | grep "XCF")
 			ff="$ff"$(echo "$ftype" | grep "GIF")
+			overwrite=""
 			if [[ "$ftype" = "data" ]]; then
 			    # overwrite contents with file type
-			    echo "file content ommitted for file type: <${ftype}>" >"${dotdir}/f_${fhash}.txt"
+			    overwrite="file content ommitted for file type: <${ftype}>"
+			    echo "$overwrite" >"${dotdir}/f_${fhash}.txt"
 			fi
                         if [[ -n "$ff" ]]; then
 			    # overwrite contents with file type
-			    echo "file content ommitted for file type: <${ff}>" >"${dotdir}/f_${fhash}.txt"
+			    overwrite="file content ommitted for file type: <${ff}>"
+			    echo "$overwrite">"${dotdir}/f_${fhash}.txt"
 			fi
 			
 			echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
+			if [[ -n "$overwrite" ]]; then
+			    echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${overwrite}\`;" >"${datdir}/f_${fhash}.js"
+			fi
 		    done
 		done
 		IFS="$oIfs"
