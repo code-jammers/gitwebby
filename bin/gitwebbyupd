@@ -188,8 +188,13 @@ do
 	    echo "$mbranch" >"${dotdir}/${normname}.m.txt"
             echo "$branches" >"${dotdir}/${normname}.b.txt"
 	    #echo "... branches"
+	    if [[ -d "${datdir}/${normname}" ]]; then
+		rm -rf "${datdir}/${normname}"
+	    fi
+	    mkdir "${datdir}/${normname}"
 	    for b in `echo "$branches"`;
             do
+		mkdir "${datdir}/${normname}/${b}"
 		remote=$(git remote| head -1)
 		if [[ -n "$remote" ]]; then
 		    remote="${remote}/"
@@ -237,6 +242,11 @@ do
 		    # echo "... ... ... files"
 		    for f in `echo "$files"`;
 		    do
+			normfnm=$(echo "${f}" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
+			if [ ! -f "${datdir}/${normname}/${b}/${normfnm}.js" ]; then
+			    echo "if (window.FILE_HIST==null) window.FILE_HIST={};window.FILE_HIST['${normname}__${b}__${normfnm}']=[];" >>"${datdir}/${normname}/${b}/${normfnm}.js"
+			fi
+			echo "window.FILE_HIST['${normname}__${b}__${normfnm}'].push('${c}');" >>"${datdir}/${normname}/${b}/${normfnm}.js"
 			#git rev-parse "${c}:${f}" 2>/dev/null
 			fhash=$(git rev-parse "${c}:${f}" 2>/dev/null)
 			err=$?
