@@ -266,7 +266,7 @@ do
 			# PERF_OPTIMIZE echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
 			#exit 1
 			echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
-			esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g')
+			esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
 			echo "$content" >"${dotdir}/f_${fhash}.txt"
 			ftype=$(file "${dotdir}/f_${fhash}.txt"| cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
 			ff=""  # ftype filtered
@@ -425,7 +425,7 @@ do
 		# flush process
 		normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
 		fnm="dc_${cmmt}.df_${normnm}"
-		diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g'  | sed 's/${/\\${/g')
+		diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g'  | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
 		echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
 		content=""
 		fp=""
@@ -478,7 +478,7 @@ do
     # flush process
     normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
     fnm="dc_${cmmt}.df_${normnm}"
-    diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g')
+    diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
     echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
     content=""
     fp=""
