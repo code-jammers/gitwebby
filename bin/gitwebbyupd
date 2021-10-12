@@ -101,7 +101,8 @@ mkdir -p "${dotdir}/lkp/dc"
 echo >"${dotdir}/repos.txt"
 
 
-
+repolistnm=$(basename "$rpd")
+echo "window.REPO_LIST={name:'${repolistnm}'}" >"${datdir}/repo-list.js"
 cd "${rpd}"
 #lst=$(ls -d */)
 nlst=""
