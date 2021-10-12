@@ -2,6 +2,10 @@
 
 # GitWebby update script
 
+# obtain script path
+pth="$(pwd)";cd $(dirname "$0");
+script="$(pwd)";cd $pth;
+
 rtd=$(pwd)    # return directory
 n=0
 if [[ "${1:0:7}" = "--proj=" ]]; then
@@ -92,6 +96,8 @@ datdir="${upd}/data"
 
 mkdir -p "$dotdir"
 mkdir -p "$datdir"
+mkdir -p "${dotdir}/lkp"
+mkdir -p "${dotdir}/lkp/dc"
 echo >"${dotdir}/repos.txt"
 
 
@@ -181,11 +187,113 @@ do
 	    mbranch=$(git rev-parse --abbrev-ref HEAD)
 	    echo "$mbranch" >"${dotdir}/${normname}.m.txt"
             echo "$branches" >"${dotdir}/${normname}.b.txt"
+	    #echo "... branches"
+	    if [[ -d "${datdir}/${normname}" ]]; then
+		rm -rf "${datdir}/${normname}"
+	    fi
+	    mkdir "${datdir}/${normname}"
 	    for b in `echo "$branches"`;
             do
+		mkdir "${datdir}/${normname}/${b}"
 		remote=$(git remote| head -1)
-                commits=$(git log "${remote}/${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s" | sed "s/'//g") #$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
+		if [[ -n "$remote" ]]; then
+		    remote="${remote}/"
+		else
+		    remote=""
+		fi
+                commits=$(git log "${remote}${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s" | sed "s/'//g") #$(git log $b 2>>/dev/null | grep ^commit\ | sed 's/commit\ //')
                 echo "$commits">"${dotdir}/${normname}.${b}.c.txt"
+		#echo "$commits"
+		#exit 1
+                tab=$'\t'
+		oIfs="$IFS"
+		IFS=$'\n'
+		# echo "... ... commits"
+		for cmmt in `echo "$commits"`;
+		do
+		    c=$(echo "$cmmt" | cut -d "$tab" -f 1)
+		    files=$(git show --pretty="format:" --name-only $c)
+                    # PERF_OPTIMIZE echo >"${dotdir}/c_${c}.cmmtmanifest.txt"
+		    echo "if (window.CMMT_MANIF==null)window.CMMT_MANIF={};window.CMMT_MANIF['${c}']=[];" >"${datdir}/c_${c}.cmmtmanifest.js"
+		    
+		    index=$(git ls-tree -r $c | cut -d ' ' -f 3-4)
+                    echo "$index" >"${dotdir}/c_${c}.snapmanifest.txt"
+		    echo "if (window.SNAP_MANIF==null)window.SNAP_MANIF={};window.SNAP_MANIF['${c}']=[];" >"${datdir}/c_${c}.snapmanifest.js"
+		    # echo "... ... ... index"
+		    for frec in `echo "$index"`;
+		    do
+			fhash=$(echo "$frec" | cut -d "${tab}" -f 1)
+			f=$(echo "$frec" | cut -d "${tab}" -f 2)
+			echo "window.SNAP_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.snapmanifest.js"
+		    done
+                    #don't need to normalize here
+		    # normindex=""
+		    # for ind in `echo "$index"`;
+		    # do
+
+		    # 	#norm=$(echo "$ind" | cut -d "$tab" -f 2)
+		    # 	#norm2=$(echo "$norm" | sed 's/ /--/g' | sed 's/\//__/g')
+			
+		    # 	#echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
+		    # 	echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
+		    # done
+		    # echo "... ... ... filediff"
+		    git show --unified=0 $c >"${dotdir}/lkp/dc/${c}.diff" # | cat | . "${script}/gitwebbyupd_filediff" "$dotdir" "$datdir" $c  # PERF_OPTIMIZE show no context
+		    # echo "... ... ... files"
+		    for f in `echo "$files"`;
+		    do
+			normfnm=$(echo "${f}" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
+			if [ ! -f "${datdir}/${normname}/${b}/${normfnm}.js" ]; then
+			    echo "if (window.FILE_HIST==null) window.FILE_HIST={};window.FILE_HIST['${normname}__${b}__${normfnm}']=[];" >>"${datdir}/${normname}/${b}/${normfnm}.js"
+			fi
+			echo "window.FILE_HIST['${normname}__${b}__${normfnm}'].push('${c}');" >>"${datdir}/${normname}/${b}/${normfnm}.js"
+			#git rev-parse "${c}:${f}" 2>/dev/null
+			fhash=$(git rev-parse "${c}:${f}" 2>/dev/null)
+			err=$?
+			if [[ err -gt 0 ]]; then
+			    # file was deleted in this commit
+			    # PERF_OPTIMIZE echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			    continue
+			fi
+                        fhash=$(echo "$fhash" | cut -d ':' -f 1)
+			#err=$(echo "$fhash" | grep ":" | wc -l)
+			# if [[ err -gt 0 ]]; then
+			#     # file was deleted in this commit
+			#     echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			#     continue
+			# fi
+			content=$(git show "${c}:${f}" | tr -d '\0' | cat)
+			# PERF_OPTIMIZE echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+			#exit 1
+			echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
+			esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
+			echo "$content" >"${dotdir}/f_${fhash}.txt"
+			ftype=$(file "${dotdir}/f_${fhash}.txt"| cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
+			ff=""  # ftype filtered
+			ff="$ff"$(echo "$ftype" | grep "MIDI")
+                        ff="$ff"$(echo "$ftype" | grep "MPEG")
+			ff="$ff"$(echo "$ftype" | grep "XCF")
+			ff="$ff"$(echo "$ftype" | grep "GIF")
+			ff="$ff"$(echo "$ftype" | grep "Audio file")
+			overwrite=""
+			if [[ "$ftype" = "data" ]]; then
+			    # overwrite contents with file type
+			    overwrite="file content ommitted for file type: <${ftype}>"
+			    echo "$overwrite" >"${dotdir}/f_${fhash}.txt"
+			fi
+                        if [[ -n "$ff" ]]; then
+			    # overwrite contents with file type
+			    overwrite="file content ommitted for file type: <${ff}>"
+			    echo "$overwrite">"${dotdir}/f_${fhash}.txt"
+			fi
+			
+			echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
+			if [[ -n "$overwrite" ]]; then
+			    echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${overwrite}\`;" >"${datdir}/f_${fhash}.js"
+			fi
+		    done
+		done
+		IFS="$oIfs"
                 #echo "$commits"
             done
 	else
@@ -274,8 +382,114 @@ repojs="${repojs}];"
 rjs="${rjs}};"
 echo "$repojs" >"${datdir}/repos.js"
 echo "$rjs" >"${datdir}/branches.js"
+
+
+# PRODUCE FILE DIFFS
+# PERF_OPTIMIZATION (use lookup file instead of extra nesting)
+diffcnt=$(ls "${dotdir}"/lkp/dc/ | wc -l)
+diffi=0
+nl=$'\n'
+hdr="if (window.DIFFS==null){window.DIFFS={};}window.DIFFS["
+
+for f in "${dotdir}"/lkp/dc/*.diff;
+do
+    ((diffi++))
+    if [[ "${diffi:${#diffi}-1:1}" = "1" ]]; then
+	echo "processing diffs..${diffi} of ${diffcnt}"
+    elif [[ $diffi -eq $diffcnt ]]; then
+	echo "processing diffs..${diffi} of ${diffcnt}"
+    fi
+    bnm=$(basename "$f")
+    cmmt="${bnm%.*}"
+    # create diff files, ie: dc_<COMMIT_HASH>.df_<norm-filename>.txt
+    #                        dc=>diff commit  df=>diff file
+    #echo "${cmmt}"
+
+    ifs_parse="$IFS"
+    IFS="$nl"
+    fp=""
+    content=""
+    for line in `cat "$f"`;
+    do
+	if [[ "${line:0:7}" = "commit " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+	elif [[ "${line:0:8}" = "Author: " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+	elif [[ "${line:0:6}" = "Date: " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+    	elif [[ "${line:0:7}" = "Merge: " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+	elif [[ "${line:0:1}" = " " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+	elif [[ "${line:0:7}" = "diff --" ]]; then
+	    # echo "fp: ${line}"
+	    if [[ -n "$fp" ]]; then
+		# flush process
+		normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
+		fnm="dc_${cmmt}.df_${normnm}"
+		diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g'  | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
+		echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
+		content=""
+		fp=""
+	    fi
+	    field=$(echo "$line" | cut -d ' ' -f 4)
+	    if [[ -z "$field" ]]; then
+		field=$(echo "$line" | cut -d ' ' -f 3)
+	    fi
+	    fp=$(echo "$field" | sed 's/b\///')
+	elif [[ "${line:0:14}" = "new file mode " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+	elif [[ "${line:0:9}" = "new mode " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+	elif [[ "${line:0:9}" = "old mode " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+	elif [[ "${line:0:18}" = "deleted file mode " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+	elif [[ "${line:0:6}" = "index " ]]; then
+	    # echo "skipping: ${line}"
+	    continue
+	else
+	    if [[ ! "${line:0:1}" = "+" ]]; then
+	       if [[ ! "${line:0:1}" = "-" ]]; then
+		   if [[ ! "${line:0:1}" = "@" ]]; then
+		       if [[ ! "${line:0:27}" = "\ No newline at end of file" ]]; then
+			   if [[ ! "${line:0:15}" = "Binary files a/" ]]; then
+			       if [[ ! "${line:0:22}" = "Binary files /dev/null" ]]; then
+				   if [[ "${line:0:7}" = "rename " ]]; then
+				       :
+				   elif [[ "${line:0:16}" = "similarity index" ]]; then
+				       :
+				   else
+				       echo "WARNING commit=${cmmt}"
+				       echo "WARNING: ${line}"
+				       # exit 1
+				   fi
+			       fi
+			   fi
+		       fi
+		  fi
+	       fi
+	    fi
+	    content="${content}${line}${nl}"
+	fi
+    done
+    # flush process
+    normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
+    fnm="dc_${cmmt}.df_${normnm}"
+    diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
+    echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
+    content=""
+    fp=""
+    IFS="$ifs_parse"
+done
+
 cd "${rtd}"
-
-
-
-

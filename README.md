@@ -71,3 +71,14 @@ bin/gitwebbyupd --proj=2 ../gitwebby-repo-root .
 
 #end
 ```
+
+## Run Tests
+
+The valid js test script must be ran from within this repository root directory
+
+```sh
+tests/validjs.bash
+```
+
+To test a new set of repositories first empty the data directory and run
+gitwebbyupd before running validjs.bash
