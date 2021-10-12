@@ -3,16 +3,24 @@ import { Repository } from '../types/Repository';
 import '@material/mwc-button';
 import '@material/mwc-textfield';
 import '@material/mwc-circular-progress-four-color';
+import loadScript from '../services/script-loader';
 import allStyles from '../styles/all-styles';
 import dayjs from 'dayjs/esm';
 
 @customElement('git-repositories')
 export default class GitRepositoriesElement extends LitElement {
+  @property({ type: String }) repoListName: String = "?";
   @property({ type: Array }) repositories: Array<Repository> = [];
   @state() filteredRepositories: Array<Repository> = [];
   @state() isLoading: boolean = false;
 
+  async loadTitle() {
+    await loadScript(`/data/repo-list.js`);
+    this.repoListName=REPO_LIST['name'];
+  }
+
   updated(changedProperties) {
+    this.loadTitle()
     if (changedProperties.has('repositories')) {
       this.filteredRepositories = this.repositories;
     }
@@ -56,7 +64,7 @@ export default class GitRepositoriesElement extends LitElement {
 
   render() {
     return html`
-      <h3>Repositories</h3>
+      <h3>Repositories: ${this.repoListName}</h3>
       <search-container>
         <mwc-textfield
           outlined
