@@ -221,6 +221,13 @@ do
                 for cmmt in `echo "$commits"`;
                 do
                     c=$(echo "$cmmt" | cut -d "$tab" -f 1)
+                    # PERF_IMPROV {_
+                    if [[ -f "${datdir}/c_${c}.cmmtmanifest.js" ]]; then
+                        if [[ $GITWEBBY_FORCE -eq 0 ]]; then
+                            continue
+                        fi
+                    fi
+                    # _}
                     files=$(git show --pretty="format:" --name-only $c)
                     # PERF_OPTIMIZE echo >"${dotdir}/c_${c}.cmmtmanifest.txt"
                     echo "if (window.CMMT_MANIF==null)window.CMMT_MANIF={};window.CMMT_MANIF['${c}']=[];" >"${datdir}/c_${c}.cmmtmanifest.js"
@@ -235,17 +242,6 @@ do
                         f=$(echo "$frec" | cut -d "${tab}" -f 2)
                         echo "window.SNAP_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.snapmanifest.js"
                     done
-                    #don't need to normalize here
-                    # normindex=""
-                    # for ind in `echo "$index"`;
-                    # do
-
-                    #     #norm=$(echo "$ind" | cut -d "$tab" -f 2)
-                    #     #norm2=$(echo "$norm" | sed 's/ /--/g' | sed 's/\//__/g')
-                    
-                    #     #echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
-                    #     echo "${normindex}${tab}${norm2}" >>"${dotdir}/c_${c}.snapmanifest.txt"
-                    # done
                     # echo "... ... ... filediff"
                     git show --unified=0 $c >"${dotdir}/lkp/dc/${c}.diff" # | cat | . "${script}/gitwebbyupd_filediff" "$dotdir" "$datdir" $c  # PERF_OPTIMIZE show no context
                     # echo "... ... ... files"
@@ -256,24 +252,23 @@ do
                             echo "if (window.FILE_HIST==null) window.FILE_HIST={};window.FILE_HIST['${normname}__${b}__${normfnm}']=[];" >>"${datdir}/${normname}/${b}/${normfnm}.js"
                         fi
                         echo "window.FILE_HIST['${normname}__${b}__${normfnm}'].push('${c}');" >>"${datdir}/${normname}/${b}/${normfnm}.js"
-                        #git rev-parse "${c}:${f}" 2>/dev/null
                         fhash=$(git rev-parse "${c}:${f}" 2>/dev/null)
                         err=$?
                         if [[ err -gt 0 ]]; then
                             # file was deleted in this commit
-                            # PERF_OPTIMIZE echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
+                            # PERF_OPTIMIZE
                             continue
                         fi
                         fhash=$(echo "$fhash" | cut -d ':' -f 1)
-                        #err=$(echo "$fhash" | grep ":" | wc -l)
-                        # if [[ err -gt 0 ]]; then
-                        #        # file was deleted in this commit
-                        #        echo "0${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
-                        #        continue
-                        # fi
+                        # PERF_IMPROV {_
+                        if [[ -f "${dotdir}/f_${fhash}.txt" ]]; then
+                            if [[ $GITWEBBY_FORCE -eq 0 ]]; then
+                                continue;
+                            fi
+                        fi
+                        # _}
                         content=$(git show "${c}:${f}" | tr -d '\0' | cat)
-                        # PERF_OPTIMIZE echo "${fhash}${tab}${f}">>"${dotdir}/c_${c}.cmmtmanifest.txt"
-                        #exit 1
+                        # PERF_OPTIMIZE
                         echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
                         esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
                         echo "$content" >"${dotdir}/f_${fhash}.txt"
@@ -303,7 +298,6 @@ do
                     done
                 done
                 IFS="$oIfs"
-                #echo "$commits"
             done
         else
             newlst=""
@@ -312,10 +306,6 @@ do
                 nl=$'\n'
                 newlst="${newlst}${nl}${curr%/}/${item}"
             done
-            #                read -r -d '' lst <<EOF
-            # ${lst}
-            # $(ls -d */ | sed "s/^/^${curr}/")
-            # EOF
             lst="${lst}
 ${newlst}"
         fi
@@ -392,9 +382,10 @@ rjs="${rjs}};"
 echo "$repojs" >"${datdir}/repos.js"
 echo "$rjs" >"${datdir}/branches.js"
 
-
 # PRODUCE FILE DIFFS
 # PERF_OPTIMIZATION (use lookup file instead of extra nesting)
+#   lkp/dc [l]oo[k]u[p] [d]iff of [c]ommit
+#   cat lkp/dc/{hash} => commit diff
 diffcnt=$(ls "${dotdir}"/lkp/dc/ | wc -l)
 diffi=0
 nl=$'\n'
@@ -412,7 +403,6 @@ do
     cmmt="${bnm%.*}"
     # create diff files, ie: dc_<COMMIT_HASH>.df_<norm-filename>.txt
     #                        dc=>diff commit  df=>diff file
-    #echo "${cmmt}"
 
     ifs_parse="$IFS"
     IFS="$nl"
