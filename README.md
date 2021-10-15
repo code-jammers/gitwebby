@@ -74,11 +74,38 @@ bin/gitwebbyupd --proj=2 ../gitwebby-repo-root .
 
 ## Run Tests
 
-The valid js test script must be ran from within this repository root directory
+The test scripts must be ran from within this repository root directory
+
+For reporting purposes you can run a summary test.
+
+```sh
+tests/summ.bash
+```
+
+Valid JS test
 
 ```sh
 tests/validjs.bash
 ```
 
+Timestamp test
+
+```sh
+tests/timestamp.bash
+```
+
 To test a new set of repositories first empty the data directory and run
-gitwebbyupd before running validjs.bash
+gitwebbyupd before running the test scripts
+
+## Env Var Overrides
+
+The gitwebby update script skips certain files that have been written
+previously. However if things are in a bad state, for whatever reason
+(ie: cancelled run, old gitwebby version bug, etc) you can force it
+to overwrite all those files using the latest code with the GITWEBBY_FORCE
+override environment variable.
+
+```sh
+export GITWEBBY_FORCE=1
+bin/gitwebbyupd ../ ./
+```

@@ -6,5 +6,7 @@
 #   tests/summ.bash
 
 validjs=$(tests/validjs.bash)
-failed_cnt=$(echo "$validjs" | grep -i "fail" | wc -l)
+timestamp=$(tests/timestamp.bash)
+nl=$'\n'
+failed_cnt=$(echo "${validjs}${nl}${timestamp}" | grep -i "fail" | wc -l)
 echo $'\n'"Failing Tests: ${failed_cnt}"

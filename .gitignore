@@ -11,3 +11,4 @@ data/
 .gitwebby/
 COMMIT.txt
 *~
+npm-debug.log*
