@@ -20,7 +20,7 @@ cat "$win" "${data}/branches.js" | node 2>>"${root}/.gitwebby/validjs.log"
 if [[ $? -eq 0 ]]; then echo "  PASS"; else echo "  FAIL"; fi
 
 echo
-echo "\*.js test (will take a few mins)"
+echo '*.js test (will take a few mins)'
 failcd=0
 for jsfile in ${data}/*.js;
 do
