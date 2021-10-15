@@ -363,7 +363,7 @@ descr'
             ti=0
             cjs="${cjs}{"  # {hash:'${c}',descr:'',timestamp:''}),"
             oIfs=$IFS
-            IFS='    '
+            IFS=$'\t'
             for ccol in `echo "$c"`;
             do
                 if [[ $ti -eq 0 ]]; then
