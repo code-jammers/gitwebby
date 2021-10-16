@@ -24,32 +24,34 @@ Explain: `bin/gitwebbyupd --proj=1 ../../ ./`
 - The `--proj=1` arg tells gitwebbyupd that there is 1 level of project folder
   nesting in hierarchy before the usual folder that lists repositories
 - The `../../` when combined with 1-level project nesting tells gitwebbyupd that
-  folder hierarchy being read will be `{proj1|..}/{repo1|..}/{gitwebby|other-repo}`
+  folder hierarchy being read will be `{proj1|..}/{repocontainer1|..}/{gitwebby|other-repo}`
 
 ## Run Tests
 
-The test scripts must be ran from within this repository root directory
+The test scripts must be ran from within this repository root directory.
 
-For reporting purposes you can run a summary test.
+To test a new set of repositories first empty the data directory and run
+gitwebbyupd before running the test scripts.
+
+### Summary Test
+
+For reporting purposes you can run a summary test which will run all tests.
 
 ```sh
 tests/summ.bash
 ```
 
-Valid JS test
+### Valid JS test
 
 ```sh
 tests/validjs.bash
 ```
 
-Timestamp test
+### Feature tests
 
 ```sh
-tests/timestamp.bash
+tests/features.bash
 ```
-
-To test a new set of repositories first empty the data directory and run
-gitwebbyupd before running the test scripts
 
 ## Env Var Overrides
 
