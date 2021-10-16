@@ -99,6 +99,8 @@ gitwebbyupd before running the test scripts
 
 ## Env Var Overrides
 
+### GITWEBBY_FORCE
+
 The gitwebby update script skips certain files that have been written
 previously. However if things are in a bad state, for whatever reason
 (ie: cancelled run, old gitwebby version bug, etc) you can force it
@@ -108,4 +110,46 @@ override environment variable.
 ```sh
 export GITWEBBY_FORCE=1
 bin/gitwebbyupd ../ ./
+```
+### GITWEBBY_NOREMOTE
+
+You can prevent network lag by setting the GITWEBBY_NOREMOTE env variable to 1
+which will cause gitwebby to ignore remote branches.
+
+```sh
+export GITWEBBY_NOREMOTE=1
+bin/gitwebbyupd ../ ./
+```
+
+### GITWEBBY_1BRANCH
+
+You can also cause only 1 branch per repository (the current branch) by
+setting the GITWEBBY_1BRANCH env variable to 1.
+
+```sh
+export GITWEBBY_1BRANCH=1
+bin/gitwebbyupd ../ ./
+```
+
+### Simpler Syntax
+
+There is simpler syntax to set environment variables if you place the
+assignment on the same line before the command invocation.
+
+```sh
+GITWEBBY_1BRANCH=1 GITWEBBY_FORCE=1 bin/gitwebbyupd ../ ./
+```
+### Test environment variable
+
+If you added these as environment variables in Windows or exported in your
+~/.profile or ~/.bashrc, etc in Linux then you can test by re-logging in
+to your machine with new shell session and try to echo in terminal (Lnx) or
+Git Bash shell (Win).
+
+```sh
+echo $GITWEBBY_1BRANCH
+echo $GITWEBBY_FORCE
+echo $GITWEBBY_NOREMOTE
+# any of these that are unset will become 0 (OFF) when the script runs
+# and they need to display a 1 if you desire it to be enabled for the script
 ```
