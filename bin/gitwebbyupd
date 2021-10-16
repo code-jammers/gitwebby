@@ -196,8 +196,12 @@ do
                 rm -rf "${datdir}/${normname}"
             fi
             mkdir "${datdir}/${normname}"
+            brnchi=0
+            brnchn=$(echo "$branches" | wc -l)
             for b in `echo "$branches"`;
             do
+                ((brnchi++))
+                echo "  > processing branches: ${brnchi} of ${brnchn}"
                 mkdir "${datdir}/${normname}/${b}"
                 remote=$(git remote| head -1)
                 if [[ -n "$remote" ]]; then
@@ -218,8 +222,16 @@ do
                 oIfs="$IFS"
                 IFS=$'\n'
                 # echo "... ... commits"
+                cmmti=0
+                cmmtn=$(echo "$commits" | wc -l)
                 for cmmt in `echo "$commits"`;
                 do
+                    ((cmmti++))
+                    if [[ "${cmmti:${#cmmti}-1:1}" = "1" ]]; then
+	                echo "        processing commits: ${cmmti} of ${cmmtn}"
+                    elif [[ $cmmti -eq $cmmtn ]]; then
+                        echo "        processing commits: ${cmmti} of ${cmmtn}"
+                    fi
                     c=$(echo "$cmmt" | cut -d "$tab" -f 1)
                     # PERF_IMPROV {_
                     if [[ -f "${datdir}/c_${c}.cmmtmanifest.js" ]]; then
