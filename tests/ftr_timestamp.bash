@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Run from root project directory like this:
-#   tests/timestamp.bash
+#   tests/ftr_timestamp.bash
 
 root=$(pwd)
 win="${root}/tests/window.js"

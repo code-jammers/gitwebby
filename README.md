@@ -2,75 +2,29 @@
 
 ## Setup
 
-- npm i
-- npm start
-
-## Easiest method to get dev data
-
 ```sh
 bin/gitwebbyupd ../ ./
+npm i
+npm start
 ```
 
-## Dev data simple
+## gitwebbyupd
 
-This example only has 1 nesting.
+Explain: `bin/gitwebbyupd ../ ./`
 
-```sh
-dir=$(pwd)
-mkdir -p ../gitwebby-repo-root-simple
-cd ../gitwebby-repo-root-simple
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_apple
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_banana
-cd "$dir"
-bin/gitwebbyupd ../gitwebby-repo-root-simple .
+This is equivalent to `bin/gitwebbyupd --proj=0 ../ ./`
 
-#end
-```
+- The `../` arg tells gitwebbyupd that the list of repository folders is in the
+  gitwebby repository's parent folder
+- The `./` arg tells gitwebbyupd that the web instance that will receive the
+  generated js data files will be the current (gitwebby repository) directory
 
-## Dev data
+Explain: `bin/gitwebbyupd --proj=1 ../../ ./`
 
-To cleanly get some dev data generated to the data/ directory, cd into the
-same directory as this README.md file and run the following commands.
-
-```sh
-dir=$(pwd)
-mkdir -p ../gitwebby-repo-root
-mkdir -p ../gitwebby-repo-root/team-a
-mkdir -p ../gitwebby-repo-root/team-b
-mkdir -p ../gitwebby-repo-root/team-a/{alice,bob}
-mkdir -p ../gitwebby-repo-root/team-b/{carol,dan}
-cd ..
-par=$(pwd)
-
-#alice
-cd gitwebby-repo-root/team-a/alice
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_apple
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_banana
-
-#bob
-cd "$par"
-cd gitwebby-repo-root/team-a/bob
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_apple
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_banana
-
-#carol
-cd "$par"
-cd gitwebby-repo-root/team-b/carol
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_apple
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_banana
-
-#dan
-cd "$par"
-cd gitwebby-repo-root/team-b/dan
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_apple
-git clone https://github.com/code-jammers/gitwebby.git gitwebby_banana
-
-cd "$dir"
-
-bin/gitwebbyupd --proj=2 ../gitwebby-repo-root .
-
-#end
-```
+- The `--proj=1` arg tells gitwebbyupd that there is 1 level of project folder
+  nesting in hierarchy before the usual folder that lists repositories
+- The `../../` when combined with 1-level project nesting tells gitwebbyupd that
+  folder hierarchy being read will be `{proj1|..}/{repo1|..}/{gitwebby|other-repo}`
 
 ## Run Tests
 
