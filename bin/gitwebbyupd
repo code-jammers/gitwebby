@@ -8,13 +8,13 @@ script="$(pwd)";cd $pth;
 
 # env variable overrides
 : ${GITWEBBY_FORCE:=0}  # set to 1 to force all files to write without skipping
-: ${GITWEBBY_NOREMOTE:=0}  # set 1 to ignore remote branches
+: ${GITWEBBY_REMOTE:=0}  # set 1 to include remote branches
 : ${GITWEBBY_1BRANCH:=0}  # set to 1 to only process 1 branch
 
 echo "|-- Run Configuration --|"
 echo "| GITWEBBY_1BRANCH    $GITWEBBY_1BRANCH |"
 echo "| GITWEBBY_FORCE      $GITWEBBY_FORCE |"
-echo "| GITWEBBY_NOREMOTE   $GITWEBBY_NOREMOTE |"
+echo "| GITWEBBY_REMOTE     $GITWEBBY_REMOTE |"
 echo "|-----------------------|"
 
 rtd=$(pwd)    # return directory
@@ -196,7 +196,7 @@ do
             #ls "../" | grep "$d"
             normname=$(echo "$name" | sed 's/\//__/g')
             mbranch=$(git rev-parse --abbrev-ref HEAD)
-            if [[ $GITWEBBY_NOREMOTE -eq 1 ]]; then
+            if [[ $GITWEBBY_REMOTE -eq 0 ]]; then
                 branches=$(git branch 2>>/dev/null| sed 's/remotes\/origin\///g' | grep -v "\->" | sed 's/\*//' | sed 's/ //g' | sed "s/'//g" | sort | uniq)
             elif [[ $GITWEBBY_1BRANCH -eq 1 ]]; then
                 branches=$(echo "$mbranch")

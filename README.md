@@ -111,13 +111,14 @@ override environment variable.
 export GITWEBBY_FORCE=1
 bin/gitwebbyupd ../ ./
 ```
-### GITWEBBY_NOREMOTE
+### GITWEBBY_REMOTE
 
-You can prevent network lag by setting the GITWEBBY_NOREMOTE env variable to 1
-which will cause gitwebby to ignore remote branches.
+By default gitwebby tries to prevent network lag by ignoring remote branches.
+
+You can enable remote branches by setting the GITWEBBY_REMOTE env variable to 1.
 
 ```sh
-export GITWEBBY_NOREMOTE=1
+export GITWEBBY_REMOTE=1
 bin/gitwebbyupd ../ ./
 ```
 
@@ -149,7 +150,7 @@ Git Bash shell (Win).
 ```sh
 echo $GITWEBBY_1BRANCH
 echo $GITWEBBY_FORCE
-echo $GITWEBBY_NOREMOTE
+echo $GITWEBBY_REMOTE
 # any of these that are unset will become 0 (OFF) when the script runs
 # and they need to display a 1 if you desire it to be enabled for the script
 ```
