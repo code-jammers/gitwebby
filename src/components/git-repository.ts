@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { css, customElement, html, LitElement, property, state } from 'lit-element';
 import { Repository } from '../types/Repository';
 
@@ -12,8 +13,8 @@ import '@material/mwc-list/mwc-list-item';
 import { Commit } from '../types/Commit';
 import { nothing } from 'lit-html';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let COMMITS: any;
+declare let SNAP_MANIF: any;
 
 @customElement('git-repository')
 export default class GitRepositoryElement extends LitElement {
@@ -22,6 +23,8 @@ export default class GitRepositoryElement extends LitElement {
   @property({ type: String }) selectedBranch: string | null = null;
   @state() commits: Array<Commit> = [];
   @state() selectedCommit: Commit | null = null;
+  @state() snapManifest: SnapManifest | null = null;
+  @state() files;
 
   updated(changedProps) {
     if (changedProps.has('repository')) {
@@ -29,6 +32,31 @@ export default class GitRepositoryElement extends LitElement {
         this.commits = COMMITS[this.repository?.normname] ?? [];
       }
     }
+  }
+
+  createFileStructure() {
+    const paths = this.snapManifest?.map(sn => sn.fnm) ?? [];
+    console.log(paths);
+
+    const treePath = {};
+    paths.forEach(path => {
+      const levels = path.split('/');
+      const file = levels.pop();
+
+      let prevLevel = treePath;
+      let prevProp = levels.shift();
+
+      levels.forEach(prop => {
+        prevLevel[prevProp] = prevLevel[prevProp] || {};
+        prevLevel = prevLevel[prevProp];
+        prevProp = prop;
+      });
+
+      prevLevel[prevProp] = (prevLevel[prevProp] || [])?.concat?.([file]);
+    });
+
+    console.log(treePath);
+    this.files = treePath;
   }
 
   static styles = [
@@ -79,6 +107,7 @@ export default class GitRepositoryElement extends LitElement {
         display: block;
         border-radius: 8px;
         overflow: auto;
+        max-height: 400px;
       }
 
       mwc-icon {
@@ -187,6 +216,12 @@ export default class GitRepositoryElement extends LitElement {
         .value=${this.selectedCommit?.hash ?? ''}
         @change=${async event => {
           this.selectedCommit = this.commits.find(c => c.hash === event.target.value) ?? null;
+          if (this.selectedCommit) {
+            await loadScript(`/data/c_${this.selectedCommit.hash}.snapmanifest.js`);
+            this.snapManifest = SNAP_MANIF[this.selectedCommit.hash];
+            console.log(this.snapManifest);
+            this.createFileStructure();
+          }
         }}
       >
         ${this.commits?.map(
@@ -222,22 +257,24 @@ export default class GitRepositoryElement extends LitElement {
                 <flex-spacer></flex-spacer>
                 <span>Last Updated: ${dayjs(this.selectedCommit?.timestamp).format('MMM DD, YYYY')}</span>
               </explorer-folder>
-              <explorer-folder>
-                <mwc-icon>folder</mwc-icon>
-                <span>src</span>
-              </explorer-folder>
-              <explorer-folder>
-                <mwc-icon>folder</mwc-icon>
-                <span>dist</span>
-              </explorer-folder>
-              <explorer-file>
-                <mwc-icon>insert_drive_file</mwc-icon>
-                <span>index.html</span>
-              </explorer-file>
-              <explorer-file>
-                <mwc-icon>insert_drive_file</mwc-icon>
-                <span>package.json</span>
-              </explorer-file>
+              ${Object.keys(this.files)
+                ?.filter(f => f !== 'undefined')
+                ?.map(
+                  folder => html`
+                    <explorer-folder>
+                      <mwc-icon>folder</mwc-icon>
+                      <span>${folder}</span>
+                    </explorer-folder>
+                  `
+                )}
+              ${this.files?.['undefined']?.map(
+                file => html`
+                  <explorer-file>
+                    <mwc-icon>insert_drive_file</mwc-icon>
+                    <span>${file}</span>
+                  </explorer-file>
+                `
+              )}
             </file-explorer>
           `}
     `;
