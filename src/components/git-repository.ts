@@ -179,6 +179,13 @@ export default class GitRepositoryElement extends LitElement {
     `,
   ];
 
+  async loadFileContents(file) {
+    const fileView = this.snapManifest.find(f => `${this.folderHistory.join('/')}${this.folderHistory?.length > 0 ? '/' : ''}${file}` === f.fnm);
+    await loadScript(`data/f_${fileView.fhash}.js`);
+    this.loadedFiles[fileView.fhash] = FILES[fileView.fhash];
+    this.selectedFileView = this.loadedFiles[fileView.fhash];
+  }
+
   render() {
     return html`
       <header>
@@ -306,7 +313,11 @@ export default class GitRepositoryElement extends LitElement {
                 ?.map(folder => {
                   if (typeof this.selectedFolder?.[folder] === 'string') {
                     return html`
-                      <explorer-file>
+                      <explorer-file
+                        @click=${async () => {
+                          this.loadFileContents(this.selectedFolder?.[folder]);
+                        }}
+                      >
                         <mwc-icon>insert_drive_file</mwc-icon>
                         <span>${this.selectedFolder?.[folder]}</span>
                       </explorer-file>
@@ -329,12 +340,7 @@ export default class GitRepositoryElement extends LitElement {
                 file => html`
                   <explorer-file
                     @click=${async () => {
-                      const fileView = this.snapManifest.find(f => `${this.folderHistory.join('/')}${file}` === f.fnm);
-                      console.log(fileView.fhash);
-                      await loadScript(`data/f_${fileView.fhash}.js`);
-                      this.loadedFiles[fileView.fhash] = FILES[fileView.fhash];
-                      this.selectedFileView = this.loadedFiles[fileView.fhash];
-                      console.log(this.selectedFileView);
+                      this.loadFileContents(file);
                     }}
                   >
                     <mwc-icon>insert_drive_file</mwc-icon>
