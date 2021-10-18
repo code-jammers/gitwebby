@@ -16,6 +16,7 @@ import { nothing } from 'lit-html';
 
 declare let COMMITS: any;
 declare let SNAP_MANIF: any;
+declare let FILES: any;
 
 @customElement('git-repository')
 export default class GitRepositoryElement extends LitElement {
@@ -28,6 +29,8 @@ export default class GitRepositoryElement extends LitElement {
   @state() files;
   @state() selectedFolder;
   @state() folderHistory: Array<string> = [];
+  @state() loadedFiles = {};
+  @state() selectedFileView;
 
   updated(changedProps) {
     if (changedProps.has('repository')) {
@@ -324,13 +327,23 @@ export default class GitRepositoryElement extends LitElement {
                 })}
               ${this.selectedFolder?.['undefined']?.map(
                 file => html`
-                  <explorer-file>
+                  <explorer-file
+                    @click=${async () => {
+                      const fileView = this.snapManifest.find(f => `${this.folderHistory.join('/')}${file}` === f.fnm);
+                      console.log(fileView.fhash);
+                      await loadScript(`data/f_${fileView.fhash}.js`);
+                      this.loadedFiles[fileView.fhash] = FILES[fileView.fhash];
+                      this.selectedFileView = this.loadedFiles[fileView.fhash];
+                      console.log(this.selectedFileView);
+                    }}
+                  >
                     <mwc-icon>insert_drive_file</mwc-icon>
                     <span>${file}</span>
                   </explorer-file>
                 `
               )}
             </file-explorer>
+            <pre>${this.selectedFileView}</pre>
           `}
     `;
   }

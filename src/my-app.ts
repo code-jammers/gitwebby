@@ -111,6 +111,7 @@ export class MyAppElement extends LitElement {
         position: relative;
         width: 100%;
         height: calc(100vh - 51px);
+        overflow: auto;
       }
 
       [hidden] {
