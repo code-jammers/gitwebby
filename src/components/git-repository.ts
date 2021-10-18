@@ -11,8 +11,11 @@ import delve from 'dlv';
 import '@material/mwc-icon';
 import '@material/mwc-select';
 import '@material/mwc-list/mwc-list-item';
+import './git-codemirror';
 import { Commit } from '../types/Commit';
 import { nothing } from 'lit-html';
+import { SnapManifest } from '../types/SnapManifest';
+import { SelectedFile } from '../types/SelectedFile';
 
 declare let COMMITS: any;
 declare let SNAP_MANIF: any;
@@ -30,7 +33,8 @@ export default class GitRepositoryElement extends LitElement {
   @state() selectedFolder;
   @state() folderHistory: Array<string> = [];
   @state() loadedFiles = {};
-  @state() selectedFileView;
+  @state() renderCodeMirror;
+  @state() selectedFile: SelectedFile | null;
 
   updated(changedProps) {
     if (changedProps.has('repository')) {
@@ -52,12 +56,12 @@ export default class GitRepositoryElement extends LitElement {
       let prevProp = levels.shift();
 
       levels.forEach(prop => {
-        prevLevel[prevProp] = prevLevel[prevProp] || {};
-        prevLevel = prevLevel[prevProp];
+        prevLevel[`${prevProp}`] = prevLevel[`${prevProp}`] || {};
+        prevLevel = prevLevel[`${prevProp}`];
         prevProp = prop;
       });
 
-      prevLevel[prevProp] = (prevLevel[prevProp] || [])?.concat?.([file]);
+      prevLevel[`${prevProp}`] = (prevLevel[`${prevProp}`] || [])?.concat?.([file]);
     });
 
     const files = treePath['undefined'];
@@ -119,7 +123,6 @@ export default class GitRepositoryElement extends LitElement {
         border: 1px solid var(--app-border-color);
         min-height: 300px;
         display: block;
-        border-radius: 8px;
         overflow: auto;
         max-height: 400px;
       }
@@ -142,6 +145,11 @@ export default class GitRepositoryElement extends LitElement {
         transition: 0.3 ease;
         cursor: pointer;
         border-bottom: 1px solid #ddd;
+      }
+
+      explorer-file[selected] {
+        background-color: var(--app-hover-color);
+        transition: 0.3 ease;
       }
 
       explorer-folder span,
@@ -176,14 +184,31 @@ export default class GitRepositoryElement extends LitElement {
       span[default-branch] {
         color: var(--app-primary-color);
       }
+
+      h5[selected-file] {
+        margin: 1rem 0;
+      }
     `,
   ];
 
   async loadFileContents(file) {
-    const fileView = this.snapManifest.find(f => `${this.folderHistory.join('/')}${this.folderHistory?.length > 0 ? '/' : ''}${file}` === f.fnm);
+    this.renderCodeMirror = false;
+    const fileView = this.snapManifest?.find(f => `${this.folderHistory.join('/')}${this.folderHistory?.length > 0 ? '/' : ''}${file}` === f.fnm);
+    if (!fileView) {
+      return;
+    }
+
     await loadScript(`data/f_${fileView.fhash}.js`);
     this.loadedFiles[fileView.fhash] = FILES[fileView.fhash];
-    this.selectedFileView = this.loadedFiles[fileView.fhash];
+    this.selectedFile = {
+      name: file,
+      view: this.loadedFiles[fileView.fhash],
+      hash: fileView.fhash,
+    } as SelectedFile;
+
+    setTimeout(() => {
+      this.renderCodeMirror = true;
+    }, 500);
   }
 
   render() {
@@ -314,6 +339,7 @@ export default class GitRepositoryElement extends LitElement {
                   if (typeof this.selectedFolder?.[folder] === 'string') {
                     return html`
                       <explorer-file
+                        ?selected=${this.selectedFile?.name === folder}
                         @click=${async () => {
                           this.loadFileContents(this.selectedFolder?.[folder]);
                         }}
@@ -339,6 +365,7 @@ export default class GitRepositoryElement extends LitElement {
               ${this.selectedFolder?.['undefined']?.map(
                 file => html`
                   <explorer-file
+                    ?selected=${this.selectedFile?.name === file}
                     @click=${async () => {
                       this.loadFileContents(file);
                     }}
@@ -349,8 +376,10 @@ export default class GitRepositoryElement extends LitElement {
                 `
               )}
             </file-explorer>
-            <pre>${this.selectedFileView}</pre>
           `}
+
+      <h5 selected-file>${this.selectedFile?.name}</h5>
+      ${!this.renderCodeMirror ? nothing : html`<git-codemirror .selectedFile=${this.selectedFile}></git-codemirror> `}
     `;
   }
 }
