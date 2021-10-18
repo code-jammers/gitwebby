@@ -1,4 +1,5 @@
-import { css, customElement, html, LitElement, property, state } from 'lit-element';
+import { html, LitElement, css } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { Repository } from '../types/Repository';
 import '@material/mwc-button';
 import '@material/mwc-textfield';

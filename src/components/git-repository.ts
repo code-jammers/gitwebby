@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { css, customElement, html, LitElement, property, state } from 'lit-element';
+import { html, LitElement, css, nothing } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { Repository } from '../types/Repository';
 
 import dayjs from 'dayjs/esm';
@@ -11,9 +12,11 @@ import delve from 'dlv';
 import '@material/mwc-icon';
 import '@material/mwc-select';
 import '@material/mwc-list/mwc-list-item';
+import '@material/mwc-icon-button';
 import './git-codemirror';
+import '../../scripts/markdown';
+
 import { Commit } from '../types/Commit';
-import { nothing } from 'lit-html';
 import { SnapManifest } from '../types/SnapManifest';
 import { SelectedFile } from '../types/SelectedFile';
 
@@ -34,12 +37,16 @@ export default class GitRepositoryElement extends LitElement {
   @state() folderHistory: Array<string> = [];
   @state() loadedFiles = {};
   @state() renderCodeMirror;
+  @state() renderMarkdown;
   @state() selectedFile: SelectedFile | null;
+  @state() isReadme: boolean = false;
 
   updated(changedProps) {
     if (changedProps.has('repository')) {
       if (this.repository?.normname) {
-        this.commits = COMMITS[this.repository?.normname] ?? [];
+        try {
+          this.commits = COMMITS[this.repository?.normname] ?? [];
+        } catch {}
       }
     }
   }
@@ -185,14 +192,28 @@ export default class GitRepositoryElement extends LitElement {
         color: var(--app-primary-color);
       }
 
-      h5[selected-file] {
+      file-header {
         margin: 1rem 0;
+      }
+
+      file-header {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      file-header h5 {
+        margin: 0;
+      }
+
+      mwc-icon-button {
+        color: var(--app-primary-color);
       }
     `,
   ];
 
   async loadFileContents(file) {
     this.renderCodeMirror = false;
+    this.renderMarkdown = false;
     const fileView = this.snapManifest?.find(f => `${this.folderHistory.join('/')}${this.folderHistory?.length > 0 ? '/' : ''}${file}` === f.fnm);
     if (!fileView) {
       return;
@@ -207,7 +228,12 @@ export default class GitRepositoryElement extends LitElement {
     } as SelectedFile;
 
     setTimeout(() => {
-      this.renderCodeMirror = true;
+      this.isReadme = this.selectedFile?.name.toLowerCase().includes('readme') ?? false;
+      if (this.isReadme) {
+        this.renderMarkdown = true;
+      } else {
+        this.renderCodeMirror = true;
+      }
     }, 500);
   }
 
@@ -382,8 +408,28 @@ export default class GitRepositoryElement extends LitElement {
             </file-explorer>
           `}
 
-      <h5 selected-file>${this.selectedFile?.name}</h5>
+      <file-header>
+        <h5>${this.selectedFile?.name}</h5>
+        <mwc-icon-button
+          ?hidden=${!this.isReadme}
+          @click=${() => {
+            this.renderCodeMirror = !this.renderCodeMirror;
+            this.renderMarkdown = !this.renderMarkdown;
+          }}
+          title="${this.renderMarkdown ? 'view code' : 'view markdown'}"
+          icon="${this.renderMarkdown ? 'code' : 'description'}"
+        ></mwc-icon-button>
+      </file-header>
       ${!this.renderCodeMirror ? nothing : html`<git-codemirror .selectedFile=${this.selectedFile}></git-codemirror> `}
+      ${!this.renderMarkdown
+        ? nothing
+        : html`
+            <wc-markdown>
+              <script type="wc-content">
+                ${this.selectedFile?.view}
+              </script>
+            </wc-markdown>
+          `}
     `;
   }
 }

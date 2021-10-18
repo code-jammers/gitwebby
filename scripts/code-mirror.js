@@ -11420,4 +11420,3 @@ var WCCodeMirror = class extends HTMLElement {
   }
 };
 customElements.define('wc-codemirror', WCCodeMirror);
-export { WCCodeMirror };

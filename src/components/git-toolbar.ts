@@ -1,4 +1,5 @@
-import { css, customElement, html, LitElement, property } from 'lit-element';
+import { html, LitElement, css } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 import '@material/mwc-icon-button';
 import allStyles from '../styles/all-styles';
 

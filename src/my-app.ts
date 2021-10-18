@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { css, customElement, html, LitElement, state } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { PendingStateEvent, SiteErrorEvent } from './events';
 import navaid from 'navaid';
 import './components/git-toolbar';

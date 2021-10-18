@@ -1,4 +1,4 @@
-import { css } from 'lit-element';
+import { css } from 'lit';
 
 const CodeMirrorStyles = css`
   .CodeMirror {
@@ -587,6 +587,10 @@ const CodeMirrorStyles = css`
 
   .cm-s-mdn-like.CodeMirror {
     background-color: #f5f5f5;
+  }
+
+  wc-codemirror {
+    pointer-events: none;
   }
 `;
 
