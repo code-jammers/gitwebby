@@ -1,7 +1,7 @@
 import { css, customElement, html, LitElement, property } from 'lit-element';
 import CodeMirrorStyles from '../styles/code-mirror-styles';
-import '../scripts/code-mirror.js';
-import '../scripts/javascript-mode.js';
+import '../../scripts/code-mirror.js';
+import '../../scripts/javascript-mode.js';
 import { SelectedFile } from '../types/SelectedFile';
 
 @customElement('git-codemirror')
