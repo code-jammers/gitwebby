@@ -232,6 +232,8 @@ export default class GitRepositoryElement extends LitElement {
 
                 // Reset commits && selected commit because branch has changed
                 this.selectedCommit = null;
+                this.renderCodeMirror = false;
+                this.selectedFile = null;
                 this.commits = COMMITS[this.repository?.normname] ?? [];
               }
             } catch (error) {
@@ -262,6 +264,8 @@ export default class GitRepositoryElement extends LitElement {
         @change=${async event => {
           this.selectedCommit = this.commits.find(c => c.hash === event.target.value) ?? null;
           if (this.selectedCommit) {
+            this.selectedFile = null;
+            this.renderCodeMirror = false;
             await loadScript(`/data/c_${this.selectedCommit.hash}.snapmanifest.js`);
             this.snapManifest = SNAP_MANIF[this.selectedCommit.hash];
             this.createFileStructure();
