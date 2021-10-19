@@ -2,536 +2,642 @@
 
 # GitWebby update script
 
-# obtain script path
-pth="$(pwd)";cd $(dirname "$0");
-script="$(pwd)";cd $pth;
+function techo { echo $'\t' "$@"; }
+function ttecho { echo $'\t' $'\t' "$@"; }
 
-# env variable overrides
-: ${GITWEBBY_FORCE:=0}  # set to 1 to force all files to write without skipping
-: ${GITWEBBY_REMOTE:=0}  # set 1 to include remote branches
-: ${GITWEBBY_1BRANCH:=0}  # set to 1 to only process 1 branch
+echo
+echo PARSE ARG ENV VARS ...
+{
+    # obtain script path
+    pth="$(pwd)";cd $(dirname "$0");
+    script="$(pwd)";cd $pth;
+    # env variable overrides
+    : ${GITWEBBY_FORCE:=0}  # set to 1 to force all files to write without skipping
+    : ${GITWEBBY_REMOTE:=0}  # set 1 to include remote branches
+    : ${GITWEBBY_1BRANCH:=0}  # set to 1 to only process 1 branch
 
-echo "|-- Run Configuration --|"
-echo "| GITWEBBY_1BRANCH    $GITWEBBY_1BRANCH |"
-echo "| GITWEBBY_FORCE      $GITWEBBY_FORCE |"
-echo "| GITWEBBY_REMOTE     $GITWEBBY_REMOTE |"
-echo "|-----------------------|"
+    techo "GITWEBBY_1BRANCH $GITWEBBY_1BRANCH"
+    techo "GITWEBBY_FORCE   $GITWEBBY_FORCE"
+    techo "GITWEBBY_REMOTE  $GITWEBBY_REMOTE"
 
-rtd=$(pwd)    # return directory
-n=0
-if [[ "${1:0:7}" = "--proj=" ]]; then
-    n="${1:7}"
-    shift
-fi
-rpd="${1%/}"  # repositories' parent directory
-upd="${2%/}"  # update directory
-help=0
-if [[ "-h" = "$1" ]]; then
-    help=1
-fi
-if [[ "--help" = "$1" ]]; then
-    help=1
-fi
-if [[ $help -eq 1 ]]; then
-    echo "gitwebbyupd will locally deploy web browsable versions of your code"
-    echo "for your local git repositories."
-    echo
-    echo "If all of your repositories are contained in ~/repos and"
-    echo "you want to deploy to ~/www/gitwebby you would run:"
-    echo "    bin/gitwebbyupd ~/repos ~/www/gitwebby"
-    echo "If your repos are organized by project, ie: ~/projects/work, ~/projects/home"
-    echo "you can run like so:"
-    echo "    bin/gitwebbyupd --proj=1 ~/projects ~/www/gitwebby"
-    echo "If your repos are organized by platform,"
-    echo "ie: ~/repo-hosts/github/usersname, ~/repo-hosts/gitlab/usersname"
-    echo "you can run like so:"
-    echo "    bin/gitwebbyupd --proj=2 ~/repo-hosts ~/www/gitwebby"
-    echo
-    echo "A gitwebby instance requires that all repositories follow the same"
-    echo "folder organization. You can have as many nested folders (--proj=n)."
-    echo "You can combine uniformly-structured folders listed in different places"
-    echo "by creating a single folder that contains soft symbolic links to all "
-    echo "your git repository folders without having multiple git repo copies, like so:"
-    echo "    mkdir ~/gitwebby-refs"
-    echo "    ln -s ~/repos ~/gitwebby-refs/repos"
-    echo "    ln -s ~/shared-repos ~/gitwebby-refs/shared-repos"
-    echo "    bin/gitwebbyupd --proj=1 ~/gitwebby-refs ~/www/gitwebby"
-    exit 0;
-fi
+    rtd=$(pwd)    # return directory
+    n=0
+    if [[ "${1:0:7}" = "--proj=" ]]; then
+        n="${1:7}"
+        shift
+    fi
+    rpd="${1%/}"  # repositories' parent directory
+    upd="${2%/}"  # update directory
 
+    help=0
+    if [[ "-h" = "$1" ]]; then
+        help=1
+    fi
+    if [[ "--help" = "$1" ]]; then
+        help=1
+    fi
+    if [[ $help -eq 1 ]]; then
+        echo "gitwebbyupd will locally deploy web browsable versions of your code"
+        echo "for your local git repositories."
+        echo
+        echo "If all of your repositories are contained in ~/repos and"
+        echo "you want to deploy to ~/www/gitwebby you would run:"
+        echo "    bin/gitwebbyupd ~/repos ~/www/gitwebby"
+        echo "If your repos are organized by project, ie: ~/projects/work, ~/projects/home"
+        echo "you can run like so:"
+        echo "    bin/gitwebbyupd --proj=1 ~/projects ~/www/gitwebby"
+        echo "If your repos are organized by platform,"
+        echo "ie: ~/repo-hosts/github/usersname, ~/repo-hosts/gitlab/usersname"
+        echo "you can run like so:"
+        echo "    bin/gitwebbyupd --proj=2 ~/repo-hosts ~/www/gitwebby"
+        echo
+        echo "A gitwebby instance requires that all repositories follow the same"
+        echo "folder organization. You can have as many nested folders (--proj=n)."
+        echo "You can combine uniformly-structured folders listed in different places"
+        echo "by creating a single folder that contains soft symbolic links to all "
+        echo "your git repository folders without having multiple git repo copies, like so:"
+        echo "    mkdir ~/gitwebby-refs"
+        echo "    ln -s ~/repos ~/gitwebby-refs/repos"
+        echo "    ln -s ~/shared-repos ~/gitwebby-refs/shared-repos"
+        echo "    bin/gitwebbyupd --proj=1 ~/gitwebby-refs ~/www/gitwebby"
+        exit 0;
+    fi
 
-valid=1
-if [[ ! -d "$rpd" ]]; then
-    valid=0
-fi
-if [[ ! -d "$upd" ]]; then
-    valid=0
-fi
-if [[ $valid -eq 0 ]]; then
-    echo "Error: invalid directories specified." 1>&2
-    echo "Standard Usage:"
-    echo "    # Directory Structure:"
-    echo "    #   repos_dir/X/.git"
-    echo "    #   repos_dir/Y/.git"
-    echo "    bin/gitwebbyupd repos_dir deploy_dir"
-    echo "Project Usage:"
-    echo "    # 1 Project Directory Structure:"
-    echo "    #   proj_dir/projA/repos_dir/X/.git"
-    echo "    #   proj_dir/projA/repos_dir/Y/.git"
-    echo "    #   proj_dir/projB/repos_dir/X/.git"
-    echo "    #   proj_dir/projB/repos_dir/Y/.git"
-    echo "    bin/gitwebbyupd --proj=1 proj_dir deploy_dir"
-    echo "    # 2 Project Directory Structure:"
-    echo "    #   platf_dir/platfA/projA/repos_dir/X/.git"
-    echo "    #   platf_dir/platfA/projA/repos_dir/Y/.git"
-    echo "    #   platf_dir/platfA/projB/repos_dir/X/.git"
-    echo "    #   platf_dir/platfA/projB/repos_dir/Y/.git"
-    echo "    #   platf_dir/platfB/projA/repos_dir/X/.git"
-    echo "    #   platf_dir/platfB/projA/repos_dir/Y/.git"
-    echo "    #   platf_dir/platfB/projB/repos_dir/X/.git"
-    echo "    #   platf_dir/platfB/projB/repos_dir/Y/.git"
-    echo "    bin/gitwebbyupd --proj=2 platf_dir deploy_dir"
-    exit 1;
-fi
+    valid=1
+    if [[ ! -d "$rpd" ]]; then
+        valid=0
+    fi
+    if [[ ! -d "$upd" ]]; then
+        valid=0
+    fi
+    if [[ $valid -eq 0 ]]; then
+        echo "Error: invalid directories specified." 1>&2
+        echo "Standard Usage:"
+        echo "    # Directory Structure:"
+        echo "    #   repos_dir/X/.git"
+        echo "    #   repos_dir/Y/.git"
+        echo "    bin/gitwebbyupd repos_dir deploy_dir"
+        echo "Project Usage:"
+        echo "    # 1 Project Directory Structure:"
+        echo "    #   proj_dir/projA/repos_dir/X/.git"
+        echo "    #   proj_dir/projA/repos_dir/Y/.git"
+        echo "    #   proj_dir/projB/repos_dir/X/.git"
+        echo "    #   proj_dir/projB/repos_dir/Y/.git"
+        echo "    bin/gitwebbyupd --proj=1 proj_dir deploy_dir"
+        echo "    # 2 Project Directory Structure:"
+        echo "    #   platf_dir/platfA/projA/repos_dir/X/.git"
+        echo "    #   platf_dir/platfA/projA/repos_dir/Y/.git"
+        echo "    #   platf_dir/platfA/projB/repos_dir/X/.git"
+        echo "    #   platf_dir/platfA/projB/repos_dir/Y/.git"
+        echo "    #   platf_dir/platfB/projA/repos_dir/X/.git"
+        echo "    #   platf_dir/platfB/projA/repos_dir/Y/.git"
+        echo "    #   platf_dir/platfB/projB/repos_dir/X/.git"
+        echo "    #   platf_dir/platfB/projB/repos_dir/Y/.git"
+        echo "    bin/gitwebbyupd --proj=2 platf_dir deploy_dir"
+        exit 1;
+    fi
+    cd "${upd}" 1>>/dev/null
+    upd=$(pwd)
+    cd - 1>>/dev/null
+    cd "${rpd}" 1>>/dev/null
+    rpd=$(pwd)
+    cd - 1>>/dev/null
+    dotdir="${upd}/.gitwebby"
+    datdir="${upd}/data"
+}
+echo ... DONE
 
-cd "${upd}" 1>>/dev/null
-upd=$(pwd)
-cd - 1>>/dev/null
+echo
+echo FIND REPO LIST NAME ...
+{
+    mkdir -p "$dotdir"
+    mkdir -p "$datdir"
+    mkdir -p "${dotdir}/lkp"
+    mkdir -p "${dotdir}/lkp/dc"
+    echo >"${dotdir}/repos.txt"
+    repolistnm=$(basename "$rpd")
+    techo "$repolistnm"
+    echo "window.REPO_LIST={name:'${repolistnm}'}" >"${datdir}/repo-list.js"
+    cd "$rpd"
+}
+echo ... DONE
 
-cd "${rpd}" 1>>/dev/null
-rpd=$(pwd)
-cd - 1>>/dev/null
+echo
+echo FIND REPO PATHS
+{
+    lst="${rpd}"
+    
+    i=0
 
-dotdir="${upd}/.gitwebby"
-datdir="${upd}/data"
-
-mkdir -p "$dotdir"
-mkdir -p "$datdir"
-mkdir -p "${dotdir}/lkp"
-mkdir -p "${dotdir}/lkp/dc"
-echo >"${dotdir}/repos.txt"
-
-
-repolistnm=$(basename "$rpd")
-echo "window.REPO_LIST={name:'${repolistnm}'}" >"${datdir}/repo-list.js"
-cd "${rpd}"
-#lst=$(ls -d */)
-nlst=""
-for item in `ls -d */`;
-do
-    nl=$'\n'
-    thisdir=$(pwd)
-    nlst="${thisdir}/${newlst}${nl}"
-done
-lst="$nlst"
-
-
-i=0
-curr="${rpd%/}"
-np1=$((n+1))
-while [ $i -le $np1 ];
-do
-    oldlst="$lst"
-    lst=""
-    for dir in `echo "$oldlst"`;
+    np1=$((n+1))
+    echo > "${dotdir}/repo-paths.txt"
+    while [ $i -le $np1 ];
     do
-        d="${dir}" #"${curr%/}/${dir}"
-        echo "$d"
-        #pwd
-        cd "$d" 1>>/dev/null 2>>/dev/null
-        if [[ $? -gt 0 ]]; then
-            echo "$d"
-            echo "error"
-            exit 1;
-        fi
-        curr="${d}"
-        if [[ $i -eq $np1 ]]; then
-            #echo "${i} = ${n}"
-            fullp=$(pwd)
-            #echo "$fullp"
-            if [[ ! -d "${fullp}/.git" ]];then
-                cd .. >>/dev/null
-                curr=$(pwd)
-                continue;
+        oldlst="$lst"
+        lst=""
+        for dir in `echo "$oldlst"`;
+        do
+            d="${dir}"
+
+            cd "$d" 1>>/dev/null 2>>/dev/null
+            if [[ $? -gt 0 ]]; then
+                continue
             fi
-            j=$n
-            ((j++))
-            #reverse string to remove last n fields and reverse back
-            revstring=""
-            for((k=${#fullp};k>-1;k--)); do revstring="${revstring}${fullp:$k:1}"; done
-            revtrim=$(echo "$revstring" | cut -d'/' -f-$j)
-            
-            name=""  # $(echo "$fullp" | rev | cut -d'/' -f-$j | rev)
-            for((k=${#revtrim};k>-1;k--)); do name="${name}${revtrim:$k:1}"; done
-            readme=$(ls | grep -i readme | head -1)
-            descr=""
-            if [[ -n "$readme" ]]; then
-                line1=$(cat "$readme" | head -1)
-                descr="$line1"
-                md=$(echo "$line1" | grep "^#" | wc -l)
-                if [[ md -gt 0 ]]; then
-                    line2=$(cat "$readme" | head -2 | tail -1)
-                    line3=$(cat "$readme" | head -3 | tail -1)
-                    if [[ "${line2:0:1}" =~ [a-z] ]]; then
-                        descr="$line2"
-                    elif [[ "${line2:0:1}" =~ [A-Z] ]]; then
-                        descr="$line2"
-                    fi
-                    if [[ "${line3:0:1}" =~ [a-z] ]]; then
-                        descr="$line3"
-                    elif [[ "${line3:0:1}" =~ [A-Z] ]]; then
-                        descr="$line3"
-                    fi
+
+            if [[ $i -eq $np1 ]]; then
+                fullp=$(pwd)
+                if [[ ! -d "${fullp}/.git" ]];then
+                    techo - "$fullp"
+                    continue;
                 fi
-                #descr=$(cat "$readme" | grep -v "^#" | grep -v "^[a-z]" | grep -v "^$" | head -1)
-            fi
-            descr=$(echo "$descr")
-            authors=$(git log --pretty=format:"%an" | sort | uniq | sed -z 's/\n/,/g')
-            authlen=${#authors}
-            ((authlen--))
-            authors="${authors:0:$authlen}"
-            mod_date=$(git log --date=iso-strict | grep "^Date:" | sed 's/Date://' | sed 's/ //g' |  head -1)
-            tab=$'\t'
-            echo "${name}${tab}${mod_date}${tab}${authors}${tab}${descr}" >>"${dotdir}/repos.txt"
-            #ls "../" | grep "$d"
-            normname=$(echo "$name" | sed 's/\//__/g')
-            mbranch=$(git rev-parse --abbrev-ref HEAD)
-            if [[ $GITWEBBY_REMOTE -eq 0 ]]; then
-                branches=$(git branch 2>>/dev/null| sed 's/remotes\/origin\///g' | grep -v "\->" | sed 's/\*//' | sed 's/ //g' | sed "s/'//g" | sort | uniq)
-            elif [[ $GITWEBBY_1BRANCH -eq 1 ]]; then
-                branches=$(echo "$mbranch")
+                techo + "$fullp"
+                echo "${fullp}" >> "${dotdir}/repo-paths.txt"
+                j=$n
+                ((j++))
             else
-                branches=$(git branch --all 2>>/dev/null| sed 's/remotes\/origin\///g' | grep -v "\->" | sed 's/\*//' | sed 's/ //g' | sed "s/'//g" | sort | uniq)
-            fi
-            echo "$mbranch" >"${dotdir}/${normname}.m.txt"
-            echo "$branches" >"${dotdir}/${normname}.b.txt"
-            #echo "... branches"
-            if [[ -d "${datdir}/${normname}" ]]; then
-                rm -rf "${datdir}/${normname}"
-            fi
-            mkdir "${datdir}/${normname}"
-            brnchi=0
-            brnchn=$(echo "$branches" | wc -l)
-            for b in `echo "$branches"`;
-            do
-                ((brnchi++))
-                echo "  > processing branches: ${brnchi} of ${brnchn}"
-                mkdir "${datdir}/${normname}/${b}"
-                remote=$(git remote| head -1)
-                if [[ -n "$remote" ]]; then
-                    remote="${remote}/"
-                else
-                    remote=""
-                fi
-                commits=$(git log "${remote}${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s" 2>>/dev/null)
-                if [[ $? -gt 0 ]]; then
-                    # branch doesn't exist yet in remote
-                    commits=$(git log "${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s")
-                fi
-                commits=$(echo "$commits" | sed "s/'//g")
-                echo "$commits">"${dotdir}/${normname}.${b}.c.txt"
-                #echo "$commits"
-                #exit 1
-                tab=$'\t'
-                oIfs="$IFS"
-                IFS=$'\n'
-                # echo "... ... commits"
-                cmmti=0
-                cmmtn=$(echo "$commits" | wc -l)
-                for cmmt in `echo "$commits"`;
+                newlst=""
+                for item in `ls -d */`;
                 do
-                    ((cmmti++))
-                    if [[ "${cmmti:${#cmmti}-1:1}" = "1" ]]; then
-	                echo "        processing commits: ${cmmti} of ${cmmtn}"
-                    elif [[ $cmmti -eq $cmmtn ]]; then
-                        echo "        processing commits: ${cmmti} of ${cmmtn}"
-                    fi
-                    c=$(echo "$cmmt" | cut -d "$tab" -f 1)
-                    # PERF_IMPROV {_
-                    if [[ -f "${datdir}/c_${c}.cmmtmanifest.js" ]]; then
-                        if [[ $GITWEBBY_FORCE -eq 0 ]]; then
-                            continue
-                        fi
-                    fi
-                    # _}
-                    files=$(git show --pretty="format:" --name-only $c)
-                    # PERF_OPTIMIZE echo >"${dotdir}/c_${c}.cmmtmanifest.txt"
-                    echo "if (window.CMMT_MANIF==null)window.CMMT_MANIF={};window.CMMT_MANIF['${c}']=[];" >"${datdir}/c_${c}.cmmtmanifest.js"
-                    
-                    index=$(git ls-tree -r $c | cut -d ' ' -f 3-4)
-                    echo "$index" >"${dotdir}/c_${c}.snapmanifest.txt"
-                    echo "if (window.SNAP_MANIF==null)window.SNAP_MANIF={};window.SNAP_MANIF['${c}']=[];" >"${datdir}/c_${c}.snapmanifest.js"
-                    # echo "... ... ... index"
-                    for frec in `echo "$index"`;
-                    do
-                        fhash=$(echo "$frec" | cut -d "${tab}" -f 1)
-                        f=$(echo "$frec" | cut -d "${tab}" -f 2)
-                        echo "window.SNAP_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.snapmanifest.js"
-                    done
-                    # echo "... ... ... filediff"
-                    git show --unified=0 $c >"${dotdir}/lkp/dc/${c}.diff" # | cat | . "${script}/gitwebbyupd_filediff" "$dotdir" "$datdir" $c  # PERF_OPTIMIZE show no context
-                    # echo "... ... ... files"
-                    for f in `echo "$files"`;
-                    do
-                        normfnm=$(echo "${f}" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
-                        if [ ! -f "${datdir}/${normname}/${b}/${normfnm}.js" ]; then
-                            echo "if (window.FILE_HIST==null) window.FILE_HIST={};window.FILE_HIST['${normname}__${b}__${normfnm}']=[];" >>"${datdir}/${normname}/${b}/${normfnm}.js"
-                        fi
-                        echo "window.FILE_HIST['${normname}__${b}__${normfnm}'].push('${c}');" >>"${datdir}/${normname}/${b}/${normfnm}.js"
-                        fhash=$(git rev-parse "${c}:${f}" 2>/dev/null)
-                        err=$?
-                        if [[ err -gt 0 ]]; then
-                            # file was deleted in this commit
-                            # PERF_OPTIMIZE
-                            continue
-                        fi
-                        fhash=$(echo "$fhash" | cut -d ':' -f 1)
-                        # PERF_IMPROV {_
-                        if [[ -f "${dotdir}/f_${fhash}.txt" ]]; then
-                            if [[ $GITWEBBY_FORCE -eq 0 ]]; then
-                                continue;
-                            fi
-                        fi
-                        # _}
-                        content=$(git show "${c}:${f}" | tr -d '\0' | cat)
-                        # PERF_OPTIMIZE
-                        echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
-                        esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
-                        echo "$content" >"${dotdir}/f_${fhash}.txt"
-                        ftype=$(file "${dotdir}/f_${fhash}.txt"| cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
-                        ff=""  # ftype filtered
-                        ff="$ff"$(echo "$ftype" | grep "MIDI")
-                        ff="$ff"$(echo "$ftype" | grep "MPEG")
-                        ff="$ff"$(echo "$ftype" | grep "XCF")
-                        ff="$ff"$(echo "$ftype" | grep "GIF")
-                        ff="$ff"$(echo "$ftype" | grep "Audio file")
-                        overwrite=""
-                        if [[ "$ftype" = "data" ]]; then
-                            # overwrite contents with file type
-                            overwrite="file content ommitted for file type: <${ftype}>"
-                            echo "$overwrite" >"${dotdir}/f_${fhash}.txt"
-                        fi
-                        if [[ -n "$ff" ]]; then
-                            # overwrite contents with file type
-                            overwrite="file content ommitted for file type: <${ff}>"
-                            echo "$overwrite">"${dotdir}/f_${fhash}.txt"
-                        fi
-                        
-                        echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
-                        if [[ -n "$overwrite" ]]; then
-                            echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${overwrite}\`;" >"${datdir}/f_${fhash}.js"
-                        fi
-                    done
+                    nl=$'\n'
+                    newlst="${newlst}${nl}${d%/}/${item}"
                 done
-                IFS="$oIfs"
-            done
-        else
-            newlst=""
-            for item in `ls -d */`;
-            do
-                nl=$'\n'
-                newlst="${newlst}${nl}${curr%/}/${item}"
-            done
-            lst="${lst}
+                lst="${lst}
 ${newlst}"
-        fi
-        cd .. >>/dev/null
-        curr=$(pwd)
-    done
-    ((i++))
-done
-
-repojs="window.REPOS=["
-rjs="window.BRANCHES={"
-oldIfs="$IFS"
-IFS='
-'
-for reporec in `cat "${dotdir}/repos.txt"`;
-do
-    rec=$(echo "$reporec" | sed -z 's/\t/\n/g')
-    repojs="${repojs}{"
-    keys='name
-last_mod
-authors
-descr'
-    i=1
-    name=""
-    for col in `echo "${rec}"`;
-    do
-        key=$(echo "$keys" | head -"${i}" | tail -1)
-        if [[ $i -eq 1 ]]; then
-            name="$col"
-        fi
-        repojs="${repojs}${key}:"
-        repojs="${repojs}'${col}',"
+            fi
+        done
         ((i++))
     done
-    repojs="${repojs}},"
-    normname=$(echo "$name" | sed 's/\//__/g')
-    mainb=$(cat "${dotdir}/${normname}.m.txt")
-    rjs="${rjs}'$normname':{main:'${mainb}',branches:["
-    for b in `cat "${dotdir}/${normname}.b.txt"`;
+}
+echo ... DONE
+
+echo
+echo FIND BRANCHES ...
+{
+    # mb => main branch lookup
+    # ab => all branch lookup
+    mkdir -p "${dotdir}/lkp"
+    mkdir -p "${dotdir}/lkp/mb"
+    mkdir -p "${dotdir}/lkp/ab"
+    rm "${dotdir}/lkp/mb/*.txt" 1>>/dev/null 2>>/dev/null
+    rm "${dotdir}/lkp/ab/*.txt" 1>>/dev/null 2>>/dev/null
+    tab=$'\t'
+    for fullp in `cat "${dotdir}/repo-paths.txt"`
     do
-        rjs="${rjs}'${b}',"
-        cjs="if (window.COMMITS==null)window.COMMITS={};window.COMMITS['${normname}']=["  #commits js
-        for c in `cat "${dotdir}/${normname}.${b}.c.txt"`;
-        do
-            ti=0
-            cjs="${cjs}{"  # {hash:'${c}',descr:'',timestamp:''}),"
-            oIfs=$IFS
-            IFS=$'\t'
-            for ccol in `echo "$c"`;
-            do
-                if [[ $ti -eq 0 ]]; then
-                    cjs="${cjs}hash:'${ccol}',"
-                elif [[ $ti -eq 1 ]]; then
-                    cjs="${cjs}author:'${ccol}',"
-                elif [[ $ti -eq 2 ]]; then
-                    cjs="${cjs}timestamp:'${ccol}',"
-                else
-                    cjs="${cjs}subject:'${ccol}',"
-                fi
-                ((ti++))
-            done
-            IFS=$oIfs
-            cjs="${cjs}},"
-            
-        done
-        cjs="${cjs}];"
-        echo "${cjs}" >"${datdir}/${normname}.${b}.commits.js"
+        cd "$fullp"
+        norm_name=$(basename "$fullp" | sed 's/\//__/g')
+        mbranch=$(git rev-parse --abbrev-ref HEAD)
+        branches=""
+        branch_filt="--list"
+        if [[ $GITWEBBY_REMOTE -eq 1 ]]; then branch_filt="--all"; fi
+        if [[ $GITWEBBY_1BRANCH -eq 1 ]]; then
+            branches=$(echo "$mbranch")
+        else
+            branches=$(git branch "$branch_filt" 2>>/dev/null| sed 's/remotes\/origin\///g' | grep -v "\->" | sed 's/\*//' | sed 's/ //g' | sed "s/'//g" | sort | uniq)
+        fi
+        mb_lkp="${dotdir}/lkp/mb/${norm_name}.txt"
+        ab_lkp="${dotdir}/lkp/ab/${norm_name}.txt"
+        techo "$mb_lkp"
+        techo "$ab_lkp"
+        echo "${fullp}${tab}${mbranch}" > "$mb_lkp"
+        echo "${fullp}${tab}${branches}" > "$ab_lkp"
+
+        echo "$mbranch" >"${dotdir}/${norm_name}.m.txt"
+        echo "$branches" >"${dotdir}/${norm_name}.b.txt"
     done
-    rjs="${rjs}]},"
-done
-IFS="$oldIfs"
-repojs="${repojs}];"
-rjs="${rjs}};"
-echo "$repojs" >"${datdir}/repos.js"
-echo "$rjs" >"${datdir}/branches.js"
+}
+echo ... DONE
 
-# PRODUCE FILE DIFFS
-# PERF_OPTIMIZATION (use lookup file instead of extra nesting)
-#   lkp/dc [l]oo[k]u[p] [d]iff of [c]ommit
-#   cat lkp/dc/{hash} => commit diff
-diffcnt=$(ls "${dotdir}"/lkp/dc/ | wc -l)
-diffi=0
-nl=$'\n'
-hdr="if (window.DIFFS==null){window.DIFFS={};}window.DIFFS["
+echo
+echo FIND COMMITS ...
+{
+    nl=$'\n'
+    tab=$'\t'
+    mkdir -p "${dotdir}/lkp/cmmt"
+    rm "${dotdir}/lkp/cmmt/*.txt" 1>>/dev/null 2>>/dev/null
 
-for f in "${dotdir}"/lkp/dc/*.diff;
-do
-    ((diffi++))
-    if [[ "${diffi:${#diffi}-1:1}" = "1" ]]; then
-        echo "processing diffs..${diffi} of ${diffcnt}"
-    elif [[ $diffi -eq $diffcnt ]]; then
-        echo "processing diffs..${diffi} of ${diffcnt}"
-    fi
-    bnm=$(basename "$f")
-    cmmt="${bnm%.*}"
-    # create diff files, ie: dc_<COMMIT_HASH>.df_<norm-filename>.txt
-    #                        dc=>diff commit  df=>diff file
-
-    ifs_parse="$IFS"
-    IFS="$nl"
-    fp=""
-    normnm=""
-    fnm=""
-    content=""
-    flushed=0
-    for line in `cat "$f"`;
+    for ab in ${dotdir}/lkp/ab/*.txt
     do
-        if [[ "${line:0:7}" = "commit " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        elif [[ "${line:0:8}" = "Author: " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        elif [[ "${line:0:6}" = "Date: " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        elif [[ "${line:0:7}" = "Merge: " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        elif [[ "${line:0:1}" = " " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        elif [[ "${line:0:7}" = "diff --" ]]; then
-            # echo "fp: ${line}"
-            if [[ -n "$fp" ]]; then
-                # flush process
-                diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g'  | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
-                echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
-                content=""
-                fp=""
-                normnm=""
-                fnm=""
+        branch_info=$(cat "$ab")
+        fullp=$(echo "$branch_info" | head -1 | cut -d $'\t' -f 1)
+        branches=$(echo "$branch_info" | cut -d $'\t' -f 2)
+        norm_name=$(basename "$fullp" | sed 's/\//__/g')
+
+        cd "$fullp"
+        for b in `echo "$branches"`
+        do
+            remote=$(git remote| head -1)
+            if [[ -n "$remote" ]]; then
+                remote="${remote}/"
+            else
+                remote=""
             fi
-            field=$(echo "$line" | cut -d ' ' -f 4)
-            if [[ -z "$field" ]]; then
-                field=$(echo "$line" | cut -d ' ' -f 3)
+            commits=$(git log "${remote}${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s" 2>>/dev/null)
+            if [[ $? -gt 0 ]]; then
+                # branch doesn't exist yet in remote
+                commits=$(git log "${b}" --pretty=format:"%H$tab%an$tab%aI$tab%s")
             fi
-            fp=$(echo "$field" | sed 's/b\///')
+            commits=$(echo "${fullp}${tab}${b}${nl}${commits}" | sed "s/'//g")
+            lkp="${dotdir}/lkp/cmmt/${norm_name}.${b}.txt"
+            echo "$commits" > "$lkp"
+            techo "$lkp"
+        done
+    done
+}
+echo ... DONE
+
+echo
+echo FIND FILES, WRITE JS FOR MANIFESTS
+{
+    mkdir -p "${dotdir}/lkp/fl"  # file lookup
+    rm "${dotdir}/lkp/fl/*.txt" 1>>/dev/null 2>>/dev/null
+
+    tab=$'\t'
+    nl=$'\n'
+    brnchn=$(ls "${dotdir}/lkp/cmmt" | wc -l)
+    brnchi=0
+    for cmmt_info in ${dotdir}/lkp/cmmt/*.txt
+    do
+        ((brnchi++))
+        techo "> processing branches: ${brnchi} of ${brnchn}"
+        first_line=$(cat "$cmmt_info" | head -1)
+        fullp=$(echo "$first_line" | cut -d $'\t' -f 1)
+        cd "$fullp"
+        normname=$(basename "$fullp" | sed 's/\//__/g')
+        b=$(echo "$first_line" | cut -d $'\t' -f 2)
+        remaining_lines=$(cat "$cmmt_info" | tail -n +2)
+        commits=$(echo "$remaining_lines" | sed "s/'//g")
+        echo "$commits">"${dotdir}/${normname}.${b}.c.txt"
+        oIfs="$IFS"
+        IFS=$'\n'
+        cmmti=0
+        cmmtn=$(echo "$commits" | wc -l)
+        for cmmt in `echo "$commits"`;
+        do
+            ((cmmti++))
+            if [[ "${cmmti:${#cmmti}-1:1}" = "1" ]]; then
+	        ttecho "processing commits: ${cmmti} of ${cmmtn}"
+            elif [[ $cmmti -eq $cmmtn ]]; then
+                ttecho "processing commits: ${cmmti} of ${cmmtn}"
+            fi
+            c=$(echo "$cmmt" | cut -d "$tab" -f 1)
             # PERF_IMPROV {_
-            normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
-            fnm="dc_${cmmt}.df_${normnm}"
-            if [[ -f "$datdir/$fnm.js" ]]; then
+            if [[ -f "${datdir}/c_${c}.cmmtmanifest.js" ]]; then
                 if [[ $GITWEBBY_FORCE -eq 0 ]]; then
-                    flushed=1
-                    break
+                    continue
                 fi
             fi
             # _}
-        elif [[ "${line:0:14}" = "new file mode " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        elif [[ "${line:0:9}" = "new mode " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        elif [[ "${line:0:9}" = "old mode " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        elif [[ "${line:0:18}" = "deleted file mode " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        elif [[ "${line:0:6}" = "index " ]]; then
-            # echo "skipping: ${line}"
-            continue
-        else
-            if [[ ! "${line:0:1}" = "+" ]]; then
-                if [[ ! "${line:0:1}" = "-" ]]; then
-                    if [[ ! "${line:0:1}" = "@" ]]; then
-                        if [[ ! "${line:0:27}" = "\ No newline at end of file" ]]; then
-                            if [[ ! "${line:0:15}" = "Binary files a/" ]]; then
-                                if [[ ! "${line:0:22}" = "Binary files /dev/null" ]]; then
-                                    if [[ "${line:0:7}" = "rename " ]]; then
-                                        :
-                                    elif [[ "${line:0:16}" = "similarity index" ]]; then
-                                        :
-                                    else
-                                        echo "WARNING commit=${cmmt}"
-                                        echo "WARNING: ${line}"
-                                        # exit 1
+            files=$(git show --pretty="format:" --name-only $c)
+            # PERF_OPTIMIZE echo >"${dotdir}/c_${c}.cmmtmanifest.txt"
+            echo "if (window.CMMT_MANIF==null)window.CMMT_MANIF={};window.CMMT_MANIF['${c}']=[];" >"${datdir}/c_${c}.cmmtmanifest.js"
+            
+            index=$(git ls-tree -r $c | cut -d ' ' -f 3-4)
+            echo "$index" >"${dotdir}/c_${c}.snapmanifest.txt"
+            echo "if (window.SNAP_MANIF==null)window.SNAP_MANIF={};window.SNAP_MANIF['${c}']=[];" >"${datdir}/c_${c}.snapmanifest.js"
+
+            for frec in `echo "$index"`;
+            do
+                fhash=$(echo "$frec" | cut -d "${tab}" -f 1)
+                f=$(echo "$frec" | cut -d "${tab}" -f 2)
+                echo "window.SNAP_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.snapmanifest.js"
+            done
+
+            git show --unified=0 $c >"${dotdir}/lkp/dc/${c}.diff"
+            echo "${fullp}${tab}${b}${tab}${c}${nl}${files}" > "${dotdir}/lkp/fl/${normname}.${b}.${c}.txt"
+        done
+    done
+}
+echo ... DONE
+
+echo
+echo WRITE JS FOR FILES
+{
+    cmmtn=$(ls "${dotdir}/lkp/fl" | wc -l)
+    cmmti=0
+    for file_info_file in ${dotdir}/lkp/fl/*.txt
+    do
+        ((cmmti++))
+        if [[ "${cmmti:${#cmmti}-1:1}" = "1" ]]; then
+	    techo "> processing commits: ${cmmti} of ${cmmtn}"
+        elif [[ $cmmti -eq $cmmtn ]]; then
+            techo "> processing commits: ${cmmti} of ${cmmtn}"
+        fi
+
+        file_info=$(cat "$file_info_file")
+        first_line=$(echo "$file_info" | head -1)
+        fullp=$(echo "$first_line" | cut -d $'\t' -f 1)
+        normname=$(basename "$fullp" | sed 's/\//__/g')
+        b=$(echo "$first_line" | cut -d $'\t' -f 2)
+        c=$(echo "$first_line" | cut -d $'\t' -f 3)
+        remaining_lines=$(echo "$file_info" | tail -n +2)
+        files="$remaining_lines"
+        cd "$fullp"
+
+        if [[ -d "${datdir}/${normname}" ]]; then
+            rm -rf "${datdir}/${normname}"
+        fi
+        mkdir "${datdir}/${normname}"
+        mkdir "${datdir}/${normname}/${b}"
+
+        for f in `echo "$files"`;
+        do
+            normfnm=$(echo "${f}" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
+            if [ ! -f "${datdir}/${normname}/${b}/${normfnm}.js" ]; then
+                echo "if (window.FILE_HIST==null) window.FILE_HIST={};window.FILE_HIST['${normname}__${b}__${normfnm}']=[];" >>"${datdir}/${normname}/${b}/${normfnm}.js"
+            fi
+            echo "window.FILE_HIST['${normname}__${b}__${normfnm}'].push('${c}');" >>"${datdir}/${normname}/${b}/${normfnm}.js"
+            fhash=$(git rev-parse "${c}:${f}" 2>/dev/null)
+            err=$?
+            if [[ err -gt 0 ]]; then
+                # file was deleted in this commit
+                # PERF_OPTIMIZE
+                continue
+            fi
+            fhash=$(echo "$fhash" | cut -d ':' -f 1)
+            # PERF_IMPROV {_
+            if [[ -f "${dotdir}/f_${fhash}.txt" ]]; then
+                if [[ $GITWEBBY_FORCE -eq 0 ]]; then
+                    continue;
+                fi
+            fi
+            # _}
+            content=$(git show "${c}:${f}" | tr -d '\0' | cat)
+            # PERF_OPTIMIZE
+            echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
+            esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
+            echo "$content" >"${dotdir}/f_${fhash}.txt"
+            ftype=$(file "${dotdir}/f_${fhash}.txt"| cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
+            ff=""  # ftype filtered
+            ff="$ff"$(echo "$ftype" | grep "MIDI")
+            ff="$ff"$(echo "$ftype" | grep "MPEG")
+            ff="$ff"$(echo "$ftype" | grep "XCF")
+            ff="$ff"$(echo "$ftype" | grep "GIF")
+            ff="$ff"$(echo "$ftype" | grep "Audio file")
+            overwrite=""
+            if [[ "$ftype" = "data" ]]; then
+                # overwrite contents with file type
+                overwrite="file content ommitted for file type: <${ftype}>"
+                echo "$overwrite" >"${dotdir}/f_${fhash}.txt"
+            fi
+            if [[ -n "$ff" ]]; then
+                # overwrite contents with file type
+                overwrite="file content ommitted for file type: <${ff}>"
+                echo "$overwrite">"${dotdir}/f_${fhash}.txt"
+            fi
+            
+            echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
+            if [[ -n "$overwrite" ]]; then
+                echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${overwrite}\`;" >"${datdir}/f_${fhash}.js"
+            fi
+        done
+    done
+}
+echo ... DONE
+
+
+echo
+echo WRITE INFO FOR REPOS LIST
+{
+    for fullp in `cat "${dotdir}/repo-paths.txt"`
+    do
+        cd "$fullp"
+        name=$(basename "$fullp" | sed 's/\//__/g')
+        readme=$(ls | grep -i readme | head -1)
+        descr=""
+        if [[ -n "$readme" ]]; then
+            line1=$(cat "$readme" | head -1)
+            descr="$line1"
+            md=$(echo "$line1" | grep "^#" | wc -l)
+            if [[ md -gt 0 ]]; then
+                line2=$(cat "$readme" | head -2 | tail -1)
+                line3=$(cat "$readme" | head -3 | tail -1)
+                if [[ "${line2:0:1}" =~ [a-z] ]]; then
+                    descr="$line2"
+                elif [[ "${line2:0:1}" =~ [A-Z] ]]; then
+                    descr="$line2"
+                fi
+                if [[ "${line3:0:1}" =~ [a-z] ]]; then
+                    descr="$line3"
+                elif [[ "${line3:0:1}" =~ [A-Z] ]]; then
+                    descr="$line3"
+                fi
+            fi
+            #descr=$(cat "$readme" | grep -v "^#" | grep -v "^[a-z]" | grep -v "^$" | head -1)
+        fi
+        descr=$(echo "$descr")
+        authors=$(git log --pretty=format:"%an" | sort | uniq | sed -z 's/\n/,/g')
+        authlen=${#authors}
+        ((authlen--))
+        authors="${authors:0:$authlen}"
+        mod_date=$(git log --date=iso-strict | grep "^Date:" | sed 's/Date://' | sed 's/ //g' |  head -1)
+        tab=$'\t'
+        echo "${name}${tab}${mod_date}${tab}${authors}${tab}${descr}" >>"${dotdir}/repos.txt"
+    done
+}
+echo ... DONE
+
+
+echo
+echo WRITE JS FOR REPOS LIST
+{
+    repojs="window.REPOS=["
+    rjs="window.BRANCHES={"
+    oldIfs="$IFS"
+    IFS='
+'
+    for reporec in `cat "${dotdir}/repos.txt"`;
+    do
+        rec=$(echo "$reporec" | sed -z 's/\t/\n/g')
+        repojs="${repojs}{"
+        keys='name
+last_mod
+authors
+descr'
+        i=1
+        name=""
+        for col in `echo "${rec}"`;
+        do
+            key=$(echo "$keys" | head -"${i}" | tail -1)
+            if [[ $i -eq 1 ]]; then
+                name="$col"
+            fi
+            repojs="${repojs}${key}:"
+            repojs="${repojs}'${col}',"
+            ((i++))
+        done
+        repojs="${repojs}},"
+        normname=$(echo "$name" | sed 's/\//__/g')
+        mainb=$(cat "${dotdir}/${normname}.m.txt")
+        rjs="${rjs}'$normname':{main:'${mainb}',branches:["
+        for b in `cat "${dotdir}/${normname}.b.txt"`;
+        do
+            rjs="${rjs}'${b}',"
+            cjs="if (window.COMMITS==null)window.COMMITS={};window.COMMITS['${normname}']=["  #commits js
+            for c in `cat "${dotdir}/${normname}.${b}.c.txt"`;
+            do
+                ti=0
+                cjs="${cjs}{"  # {hash:'${c}',descr:'',timestamp:''}),"
+                oIfs=$IFS
+                IFS=$'\t'
+                for ccol in `echo "$c"`;
+                do
+                    if [[ $ti -eq 0 ]]; then
+                        cjs="${cjs}hash:'${ccol}',"
+                    elif [[ $ti -eq 1 ]]; then
+                        cjs="${cjs}author:'${ccol}',"
+                    elif [[ $ti -eq 2 ]]; then
+                        cjs="${cjs}timestamp:'${ccol}',"
+                    else
+                        cjs="${cjs}subject:'${ccol}',"
+                    fi
+                    ((ti++))
+                done
+                IFS=$oIfs
+                cjs="${cjs}},"
+                
+            done
+            cjs="${cjs}];"
+            echo "${cjs}" >"${datdir}/${normname}.${b}.commits.js"
+        done
+        rjs="${rjs}]},"
+    done
+    IFS="$oldIfs"
+    repojs="${repojs}];"
+    rjs="${rjs}};"
+    echo "$repojs" >"${datdir}/repos.js"
+    echo "$rjs" >"${datdir}/branches.js"
+}
+echo ... DONE
+
+echo
+echo PROCESS DIFFS
+{
+    # PRODUCE FILE DIFFS
+    # PERF_OPTIMIZATION (use lookup file instead of extra nesting)
+    #   lkp/dc [l]oo[k]u[p] [d]iff of [c]ommit
+    #   cat lkp/dc/{hash} => commit diff
+    diffcnt=$(ls "${dotdir}"/lkp/dc/ | wc -l)
+    diffi=0
+    nl=$'\n'
+    hdr="if (window.DIFFS==null){window.DIFFS={};}window.DIFFS["
+
+    for f in "${dotdir}"/lkp/dc/*.diff;
+    do
+        ((diffi++))
+        if [[ "${diffi:${#diffi}-1:1}" = "1" ]]; then
+            echo "processing diffs..${diffi} of ${diffcnt}"
+        elif [[ $diffi -eq $diffcnt ]]; then
+            echo "processing diffs..${diffi} of ${diffcnt}"
+        fi
+        bnm=$(basename "$f")
+        cmmt="${bnm%.*}"
+        # create diff files, ie: dc_<COMMIT_HASH>.df_<norm-filename>.txt
+        #                        dc=>diff commit  df=>diff file
+
+        ifs_parse="$IFS"
+        IFS="$nl"
+        fp=""
+        normnm=""
+        fnm=""
+        content=""
+        flushed=0
+        for line in `cat "$f"`;
+        do
+            if [[ "${line:0:7}" = "commit " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            elif [[ "${line:0:8}" = "Author: " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            elif [[ "${line:0:6}" = "Date: " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            elif [[ "${line:0:7}" = "Merge: " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            elif [[ "${line:0:1}" = " " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            elif [[ "${line:0:7}" = "diff --" ]]; then
+                # echo "fp: ${line}"
+                if [[ -n "$fp" ]]; then
+                    # flush process
+                    diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g'  | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
+                    echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
+                    content=""
+                    fp=""
+                    normnm=""
+                    fnm=""
+                fi
+                field=$(echo "$line" | cut -d ' ' -f 4)
+                if [[ -z "$field" ]]; then
+                    field=$(echo "$line" | cut -d ' ' -f 3)
+                fi
+                fp=$(echo "$field" | sed 's/b\///')
+                # PERF_IMPROV {_
+                normnm=$(echo "$fp" | sed 's/\//__/g' | sed 's/ /--/g' | sed 's/\./--/g')
+                fnm="dc_${cmmt}.df_${normnm}"
+                if [[ -f "$datdir/$fnm.js" ]]; then
+                    if [[ $GITWEBBY_FORCE -eq 0 ]]; then
+                        flushed=1
+                        break
+                    fi
+                fi
+                # _}
+            elif [[ "${line:0:14}" = "new file mode " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            elif [[ "${line:0:9}" = "new mode " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            elif [[ "${line:0:9}" = "old mode " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            elif [[ "${line:0:18}" = "deleted file mode " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            elif [[ "${line:0:6}" = "index " ]]; then
+                # echo "skipping: ${line}"
+                continue
+            else
+                if [[ ! "${line:0:1}" = "+" ]]; then
+                    if [[ ! "${line:0:1}" = "-" ]]; then
+                        if [[ ! "${line:0:1}" = "@" ]]; then
+                            if [[ ! "${line:0:27}" = "\ No newline at end of file" ]]; then
+                                if [[ ! "${line:0:15}" = "Binary files a/" ]]; then
+                                    if [[ ! "${line:0:22}" = "Binary files /dev/null" ]]; then
+                                        if [[ "${line:0:7}" = "rename " ]]; then
+                                            :
+                                        elif [[ "${line:0:16}" = "similarity index" ]]; then
+                                            :
+                                        else
+                                            echo "WARNING commit=${cmmt}"
+                                            echo "WARNING: ${line}"
+                                            # exit 1
+                                        fi
                                     fi
                                 fi
                             fi
                         fi
                     fi
                 fi
+                content="${content}${line}${nl}"
             fi
-            content="${content}${line}${nl}"
+        done
+        # flush process
+        if [[ flushed -eq 0 ]]; then
+            diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/$'$'\v''{/g')  # replace dollar open-curly with dollar vert tab open-curly
+            # sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
+            echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
+            flushed=0
         fi
+        content=""
+        fp=""
+        normnm=""
+        fnm=""
+        IFS="$ifs_parse"
     done
-    # flush process
-    if [[ flushed -eq 0 ]]; then
-        diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/$'$'\v''{/g')  # replace dollar open-curly with dollar vert tab open-curly
-        # sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
-        echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
-        flushed=0
-    fi
-    content=""
-    fp=""
-    normnm=""
-    fnm=""
-    IFS="$ifs_parse"
-done
+}
+echo ... DONE
 
 cd "${rtd}"
