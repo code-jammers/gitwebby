@@ -384,7 +384,8 @@ echo WRITE JS FOR FILES
                 overwrite="file content ommitted for file type: <${ff}>"
                 echo "$overwrite">"${dotdir}/f_${fhash}.txt"
             fi
-            
+            ext=$([[ "$f" = *.* ]] && echo ".${f##*.}" || echo '')
+            echo "$content" > "${datdir}/a_${fhash}${ext}"
             echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
             if [[ -n "$overwrite" ]]; then
                 echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${overwrite}\`;" >"${datdir}/f_${fhash}.js"
