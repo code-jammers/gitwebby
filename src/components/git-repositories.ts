@@ -1,4 +1,5 @@
-import { css, customElement, html, LitElement, property, state } from 'lit-element';
+import { html, LitElement, css } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { Repository } from '../types/Repository';
 import '@material/mwc-button';
 import '@material/mwc-textfield';
@@ -7,20 +8,23 @@ import loadScript from '../services/script-loader';
 import allStyles from '../styles/all-styles';
 import dayjs from 'dayjs/esm';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare let REPO_LIST: any;
+
 @customElement('git-repositories')
 export default class GitRepositoriesElement extends LitElement {
-  @property({ type: String }) repoListName: String = "?";
+  @property({ type: String }) repoListName: string = '?';
   @property({ type: Array }) repositories: Array<Repository> = [];
   @state() filteredRepositories: Array<Repository> = [];
   @state() isLoading: boolean = false;
 
   async loadTitle() {
-    await loadScript(`/data/repo-list.js`);
-    this.repoListName=REPO_LIST['name'];
+    await loadScript('/data/repo-list.js');
+    this.repoListName = REPO_LIST['name'];
   }
 
   updated(changedProperties) {
-    this.loadTitle()
+    this.loadTitle();
     if (changedProperties.has('repositories')) {
       this.filteredRepositories = this.repositories;
     }

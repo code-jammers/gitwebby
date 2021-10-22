@@ -1,19 +1,28 @@
-import { css, customElement, html, LitElement, property, state } from 'lit-element';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { html, LitElement, css, nothing } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { Repository } from '../types/Repository';
 
 import dayjs from 'dayjs/esm';
 import allStyles from '../styles/all-styles';
 import loadScript from '../services/script-loader';
 import appEvents from '../services/app-events';
+import delve from 'dlv';
 
 import '@material/mwc-icon';
 import '@material/mwc-select';
 import '@material/mwc-list/mwc-list-item';
-import { Commit } from '../types/Commit';
-import { nothing } from 'lit-html';
+import '@material/mwc-icon-button';
+import './git-codemirror';
+import '../../scripts/markdown';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+import { Commit } from '../types/Commit';
+import { SnapManifest } from '../types/SnapManifest';
+import { SelectedFile } from '../types/SelectedFile';
+
 declare let COMMITS: any;
+declare let SNAP_MANIF: any;
+declare let FILES: any;
 
 @customElement('git-repository')
 export default class GitRepositoryElement extends LitElement {
@@ -22,13 +31,57 @@ export default class GitRepositoryElement extends LitElement {
   @property({ type: String }) selectedBranch: string | null = null;
   @state() commits: Array<Commit> = [];
   @state() selectedCommit: Commit | null = null;
+  @state() snapManifest: SnapManifest | null = null;
+  @state() files;
+  @state() selectedFolder;
+  @state() folderHistory: Array<string> = [];
+  @state() loadedFiles = {};
+  @state() renderCodeMirror;
+  @state() renderMarkdown;
+  @state() selectedFile: SelectedFile | null;
+  @state() isReadme: boolean = false;
 
   updated(changedProps) {
     if (changedProps.has('repository')) {
       if (this.repository?.normname) {
-        this.commits = COMMITS[this.repository?.normname] ?? [];
+        try {
+          this.commits = COMMITS[this.repository?.normname] ?? [];
+        } catch {}
       }
     }
+  }
+
+  createFileStructure() {
+    const paths = this.snapManifest?.map(sn => sn.fnm) ?? [];
+
+    const treePath = {};
+    paths.forEach(path => {
+      const levels = path.split('/');
+      const file = levels.pop();
+
+      let prevLevel = treePath;
+      let prevProp = levels.shift();
+
+      levels.forEach(prop => {
+        prevLevel[`${prevProp}`] = prevLevel[`${prevProp}`] || {};
+        prevLevel = prevLevel[`${prevProp}`];
+        prevProp = prop;
+      });
+
+      prevLevel[`${prevProp}`] = (prevLevel[`${prevProp}`] || [])?.concat?.([file]);
+    });
+
+    const files = treePath['undefined'];
+    const filesAndFolders = {};
+    for (const prop in treePath) {
+      if (prop !== 'undefined') {
+        filesAndFolders[prop] = treePath[prop];
+      } else {
+        filesAndFolders['undefined'] = files;
+      }
+    }
+    this.files = filesAndFolders;
+    this.selectedFolder = filesAndFolders;
   }
 
   static styles = [
@@ -77,8 +130,8 @@ export default class GitRepositoryElement extends LitElement {
         border: 1px solid var(--app-border-color);
         min-height: 300px;
         display: block;
-        border-radius: 8px;
         overflow: auto;
+        max-height: 400px;
       }
 
       mwc-icon {
@@ -93,12 +146,17 @@ export default class GitRepositoryElement extends LitElement {
         align-items: center;
       }
 
-      explorer-folder:hover,
+      explorer-folder:not([header]):hover,
       explorer-file:hover {
         background-color: var(--app-hover-color);
         transition: 0.3 ease;
         cursor: pointer;
         border-bottom: 1px solid #ddd;
+      }
+
+      explorer-file[selected] {
+        background-color: var(--app-hover-color);
+        transition: 0.3 ease;
       }
 
       explorer-folder span,
@@ -111,7 +169,6 @@ export default class GitRepositoryElement extends LitElement {
       explorer-folder[header] {
         font-size: 12px;
         color: #eee;
-        pointer-events: none;
         padding: 16px 8px;
       }
 
@@ -134,8 +191,51 @@ export default class GitRepositoryElement extends LitElement {
       span[default-branch] {
         color: var(--app-primary-color);
       }
+
+      file-header {
+        margin: 1rem 0;
+      }
+
+      file-header {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      file-header h5 {
+        margin: 0;
+      }
+
+      mwc-icon-button {
+        color: var(--app-primary-color);
+      }
     `,
   ];
+
+  async loadFileContents(file) {
+    this.renderCodeMirror = false;
+    this.renderMarkdown = false;
+    const fileView = this.snapManifest?.find(f => `${this.folderHistory.join('/')}${this.folderHistory?.length > 0 ? '/' : ''}${file}` === f.fnm);
+    if (!fileView) {
+      return;
+    }
+
+    await loadScript(`data/f_${fileView.fhash}.js`);
+    this.loadedFiles[fileView.fhash] = FILES[fileView.fhash];
+    this.selectedFile = {
+      name: file,
+      view: this.loadedFiles[fileView.fhash],
+      hash: fileView.fhash,
+    } as SelectedFile;
+
+    setTimeout(() => {
+      this.isReadme = this.selectedFile?.name.toLowerCase().includes('readme') ?? false;
+      if (this.isReadme) {
+        this.renderMarkdown = true;
+      } else {
+        this.renderCodeMirror = true;
+      }
+    }, 500);
+  }
 
   render() {
     return html`
@@ -158,6 +258,8 @@ export default class GitRepositoryElement extends LitElement {
 
                 // Reset commits && selected commit because branch has changed
                 this.selectedCommit = null;
+                this.renderCodeMirror = false;
+                this.selectedFile = null;
                 this.commits = COMMITS[this.repository?.normname] ?? [];
               }
             } catch (error) {
@@ -187,6 +289,13 @@ export default class GitRepositoryElement extends LitElement {
         .value=${this.selectedCommit?.hash ?? ''}
         @change=${async event => {
           this.selectedCommit = this.commits.find(c => c.hash === event.target.value) ?? null;
+          if (this.selectedCommit) {
+            this.selectedFile = null;
+            this.renderCodeMirror = false;
+            await loadScript(`/data/c_${this.selectedCommit.hash}.snapmanifest.js`);
+            this.snapManifest = SNAP_MANIF[this.selectedCommit.hash];
+            this.createFileStructure();
+          }
         }}
       >
         ${this.commits?.map(
@@ -218,27 +327,108 @@ export default class GitRepositoryElement extends LitElement {
             <file-explorer>
               <explorer-folder header>
                 <mwc-icon>code</mwc-icon>
-                <span>${this.repository?.name}:/</span>
+                <span
+                  ><a
+                    @click=${e => {
+                      e.preventDefault();
+                      this.selectedFolder = this.files;
+                      this.folderHistory = [];
+                    }}
+                    href="#"
+                    >${this.repository?.name}${this.folderHistory?.length > 0 ? '/' : ''}</a
+                  >${this.folderHistory.map(
+                    (f, idx) =>
+                      html`<a
+                          @click=${e => {
+                            e.preventDefault();
+                            let hasFoundFolder = false;
+                            const newFolderHistory = this.folderHistory.map(ff => {
+                              if (ff === f) {
+                                hasFoundFolder = true;
+                                return ff;
+                              }
+                              if (!hasFoundFolder) {
+                                return ff;
+                              }
+                              return null;
+                            });
+                            this.folderHistory = newFolderHistory.filter(ff => Boolean(ff)) as Array<string>;
+                            this.selectedFolder = delve(this.files, this.folderHistory);
+                          }}
+                          href="#"
+                          >${f}</a
+                        >${idx !== this.folderHistory?.length - 1 ? '/' : ''}`
+                  )}</span
+                >
                 <flex-spacer></flex-spacer>
                 <span>Last Updated: ${dayjs(this.selectedCommit?.timestamp).format('MMM DD, YYYY')}</span>
               </explorer-folder>
-              <explorer-folder>
-                <mwc-icon>folder</mwc-icon>
-                <span>src</span>
-              </explorer-folder>
-              <explorer-folder>
-                <mwc-icon>folder</mwc-icon>
-                <span>dist</span>
-              </explorer-folder>
-              <explorer-file>
-                <mwc-icon>insert_drive_file</mwc-icon>
-                <span>index.html</span>
-              </explorer-file>
-              <explorer-file>
-                <mwc-icon>insert_drive_file</mwc-icon>
-                <span>package.json</span>
-              </explorer-file>
+              ${Object.keys(this.selectedFolder ?? {})
+                ?.filter(f => f !== 'undefined')
+                ?.map(folder => {
+                  if (typeof this.selectedFolder?.[folder] === 'string') {
+                    return html`
+                      <explorer-file
+                        ?selected=${this.selectedFile?.name === folder}
+                        @click=${async () => {
+                          this.loadFileContents(this.selectedFolder?.[folder]);
+                        }}
+                      >
+                        <mwc-icon>insert_drive_file</mwc-icon>
+                        <span>${this.selectedFolder?.[folder]}</span>
+                      </explorer-file>
+                    `;
+                  } else {
+                    return html`
+                      <explorer-folder
+                        @click=${() => {
+                          this.folderHistory = [...this.folderHistory, folder];
+                          this.selectedFolder = this.selectedFolder[folder];
+                        }}
+                      >
+                        <mwc-icon>folder</mwc-icon>
+                        <span>${folder}</span>
+                      </explorer-folder>
+                    `;
+                  }
+                })}
+              ${this.selectedFolder?.['undefined']?.map(
+                file => html`
+                  <explorer-file
+                    ?selected=${this.selectedFile?.name === file}
+                    @click=${async () => {
+                      this.loadFileContents(file);
+                    }}
+                  >
+                    <mwc-icon>insert_drive_file</mwc-icon>
+                    <span>${file}</span>
+                  </explorer-file>
+                `
+              )}
             </file-explorer>
+          `}
+
+      <file-header>
+        <h5>${this.selectedFile?.name}</h5>
+        <mwc-icon-button
+          ?hidden=${!this.isReadme}
+          @click=${() => {
+            this.renderCodeMirror = !this.renderCodeMirror;
+            this.renderMarkdown = !this.renderMarkdown;
+          }}
+          title="${this.renderMarkdown ? 'view code' : 'view markdown'}"
+          icon="${this.renderMarkdown ? 'code' : 'description'}"
+        ></mwc-icon-button>
+      </file-header>
+      ${!this.renderCodeMirror ? nothing : html`<git-codemirror .selectedFile=${this.selectedFile}></git-codemirror> `}
+      ${!this.renderMarkdown
+        ? nothing
+        : html`
+            <wc-markdown>
+              <script type="wc-content">
+                ${this.selectedFile?.view}
+              </script>
+            </wc-markdown>
           `}
     `;
   }

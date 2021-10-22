@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { css, customElement, html, LitElement, state } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { PendingStateEvent, SiteErrorEvent } from './events';
 import navaid from 'navaid';
 import './components/git-toolbar';
@@ -100,7 +101,7 @@ export class MyAppElement extends LitElement {
         flex-direction: column;
         --app-primary-color: #9b4dca;
         --app-light-text-color: #606c76;
-        --app-border-color: #767676;
+        --app-border-color: #9e9e9e;
         --app-hover-color: #f5f5f5;
         --app-max-width: 1400px;
       }
@@ -111,6 +112,7 @@ export class MyAppElement extends LitElement {
         position: relative;
         width: 100%;
         height: calc(100vh - 51px);
+        overflow: auto;
       }
 
       [hidden] {
