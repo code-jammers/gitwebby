@@ -110,3 +110,19 @@ echo $GITWEBBY_REMOTE
 # any of these that are unset will become 0 (OFF) when the script runs
 # and they need to display a 1 if you desire it to be enabled for the script
 ```
+
+## Documentation
+
+The gitwebby update script is a literate\* program that you can read
+at bin/gitwebbyupd or you can read just the extracted commentary at
+self_doc/bin/gitwebbyupd/README.
+
+The commentary file can be re-generated from the code by just running the code
+and using unix pipeline filters to write the output file:
+
+```sh
+bin/gitwebbyupd ../ ./ | grep -v '^\s' > self_doc/bin/gitwebbyupd/README
+tests/ftr_artifacts.bash |  grep -v '^\s' > self_doc/tests/ftr_artifacts.bash/README
+```
+
+\* arguably a literate program for reasons found in self_docs/README.md.

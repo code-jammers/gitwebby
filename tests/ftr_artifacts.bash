@@ -3,9 +3,15 @@ ss="$_"  # script source
 sd=$(dirname "$ss")  # script dir
 rd=$(dirname "$sd")  # repo dir
 
-# Run from root project directory like this:
-#   tests/ftr_artifacts.bash
-echo "Artifacts Test"
+echo
+echo ARTIFACTS TEST
+echo 1. CREATE 1.txt
+echo 2. GIT INIT+ADD+COMMIT
+echo 3. RUN gitwebbyupd
+echo 4. ENSURE ARTIFACT a_\{hash\}.txt IS SAVED
+echo 5. AND ENSURE IT HAS THE CONTENTS OF 1.txt
+echo ...
+{
 rld="${rd}/.gitwebby/testrepos"  # repo list dir
 rm -rf "${rld}" 2>>/dev/null
 mkdir "${rld}"
@@ -21,13 +27,19 @@ mkdir data
 cd data
 found=0
 touch a_ignore.txt
+fnm=
 for f in a_*.txt
 do
     if [[ $f = a_ignore.txt ]]; then
         continue
     fi
     found=1
+    fnm="$f"
     break
 done
 
+val=$(cat "$fnm")
+if [[ "$val" -eq 1 ]]; then :; else found=0; fi
 if [[ $found -gt 0 ]]; then echo "  PASS"; else echo "  FAIL"; fi
+}
+echo ... DONE
