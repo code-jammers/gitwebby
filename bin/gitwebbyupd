@@ -108,6 +108,7 @@ echo DEFINE PROGRAM VARS ...
     bt=$'`'  # backtick
     vt=$'\v' # vertical-tab
     btrepl="<"$'<'"gitwebby_backtick"">"$'>'
+    vtrepl="<"$'<'"gitwebby_verttab"">"$'>'
 }
 echo ... DONE
 
@@ -316,9 +317,14 @@ echo ... DONE
 echo
 echo WRITE FILE CONTENTS TO DATA JS FILES
 echo WITH THE FOLLOWING STRING REPLACEMENTS
-echo 1.\ '`' BECOMES \$\{btrepl\}
-echo 2.\ \$\{ BECOMES \$\\v\{
-echo 3.\ \$\{btrepl\} BECOMES '`'
+echo 0.\ btrepl VARIABLE IS A UNIQUE ID UNLIKELY TO BE FOUND IN SOURCE CODE
+echo a.\ vtrepl VARIABLE IS A UNIQUE ID UNLIKELY TO BE FOUND IN SOURCE CODE
+echo 1.\ FCS = [F]ILE [C]ONTENT [S]TRING
+echo a.\ FCS REPLACE '`' WITH \$\{btrepl\}
+echo b.\ FCS REPLACE \$\{ WITH \$ \$\{btrepl\} \{
+echo 2.\ [T]EMPLATE [C]ONTENT [S]TRING = '`FCS`'
+echo a.\ TCS.replaceAll\(\$\{btrepl\}, '`'\)
+echo b.\ TCS.replaceAll\(\$\{vtrepl\}, "'')"
 {
     cmmtn=$(ls "${dotdir}/lkp/fl" | wc -l)
     cmmti=0
@@ -375,7 +381,7 @@ echo 3.\ \$\{btrepl\} BECOMES '`'
 
             # PERF_OPTIMIZE
             echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
-            esc_content=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'$'\v''{/g')  #  sed "s/[\\]*${bt}/\\\\${bt}/g"
+            esc_content=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'${vtrepl}'{/g')  #  sed "s/[\\]*${bt}/\\\\${bt}/g"
             echo "$content" >"${dotdir}/f_${fhash}.txt"
             ftype=$(file "${dotdir}/f_${fhash}.txt"| cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
             ff=""  # ftype filtered
@@ -395,9 +401,9 @@ echo 3.\ \$\{btrepl\} BECOMES '`'
                 overwrite="file content ommitted for file type: <${ff}>"
                 echo "$overwrite">"${dotdir}/f_${fhash}.txt"
             fi
-            echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=String.raw\`${esc_content}\`.replaceAll('${btrepl}', '${bt}');" >"${datdir}/f_${fhash}.js"
+            echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=String.raw\`${esc_content}\`.replaceAll('${btrepl}', '${bt}').replaceAll('${vtrepl}', '');" >"${datdir}/f_${fhash}.js"
             if [[ -n "$overwrite" ]]; then
-                echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=String.raw\`${overwrite}\`.replaceAll('${btrepl}', '${bt}');" >"${datdir}/f_${fhash}.js"
+                echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=String.raw\`${overwrite}\`.replaceAll('${btrepl}', '${bt}').replaceAll('${vtrepl}', '');" >"${datdir}/f_${fhash}.js"
             fi
         done
     done
@@ -523,9 +529,14 @@ echo
 echo PROCESS DIFFS BY PARSING COMMIT DIFFS AND
 echo WRITE INDIVIDUAL FILE DIFF CONTENTS TO DATA JS FILES
 echo WITH THE FOLLOWING STRING REPLACEMENTS
-echo 1.\ '`' BECOMES \$\{btrepl\}
-echo 2.\ \$\{ BECOMES \$\\v\{
-echo 3.\ \$\{btrepl\} BECOMES '`'
+echo 0.\ btrepl VARIABLE IS A UNIQUE ID UNLIKELY TO BE FOUND IN SOURCE CODE
+echo a.\ vtrepl VARIABLE IS A UNIQUE ID UNLIKELY TO BE FOUND IN SOURCE CODE
+echo 1.\ FCS = [F]ILE [C]ONTENT [S]TRING
+echo a.\ FCS REPLACE '`' WITH \$\{btrepl\}
+echo b.\ FCS REPLACE \$\{ WITH \$ \$\{btrepl\} \{
+echo 2.\ [T]EMPLATE [C]ONTENT [S]TRING = '`FCS`'
+echo a.\ TCS.replaceAll\(\$\{btrepl\}, '`'\)
+echo b.\ TCS.replaceAll\(\$\{vtrepl\}, "'')"
 {
     # PRODUCE FILE DIFFS
     # PERF_OPTIMIZATION (use lookup file instead of extra nesting)
@@ -577,8 +588,8 @@ echo 3.\ \$\{btrepl\} BECOMES '`'
                 # echo "fp: ${line}"
                 if [[ -n "$fp" ]]; then
                     # flush process
-                    diff_content_js=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'$'\v''{/g')  #  | sed 's/`/\\`/g' | sed "s/\\\\${bt}/\\${vt}\\${bt}/g" 
-                    echo "$hdr'$fnm']=String.raw\`${diff_content_js}\`.replaceAll('${btrepl}', '${bt}');" >"$datdir/$fnm.js"
+                    diff_content_js=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'${vtrepl}'{/g')  #  | sed 's/`/\\`/g' | sed "s/\\\\${bt}/\\${vt}\\${bt}/g" 
+                    echo "$hdr'$fnm']=String.raw\`${diff_content_js}\`.replaceAll('${btrepl}', '${bt}').replaceAll('${vtrepl}', '');" >"$datdir/$fnm.js"
                     content=""
                     fp=""
                     normnm=""
@@ -641,8 +652,8 @@ echo 3.\ \$\{btrepl\} BECOMES '`'
         done
         # flush process
         if [[ flushed -eq 0 ]]; then
-            diff_content_js=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'$'\v''{/g')  # | sed 's/`/\\`/g' | sed "s/\\\\${bt}/\\${vt}\\${bt}/g"
-            echo "$hdr'$fnm']=String.raw\`${diff_content_js}\`.replaceAll('${btrepl}', '${bt}');" >"$datdir/$fnm.js"
+            diff_content_js=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'${vtrepl}'{/g')  # | sed 's/`/\\`/g' | sed "s/\\\\${bt}/\\${vt}\\${bt}/g"
+            echo "$hdr'$fnm']=String.raw\`${diff_content_js}\`.replaceAll('${btrepl}', '${bt}').replaceAll('${vtrepl}', '');" >"$datdir/$fnm.js"
             flushed=0
         fi
         content=""

@@ -122,6 +122,7 @@ and using unix pipeline filters to write the output file:
 
 ```sh
 bin/gitwebbyupd ../ ./ | grep -v '^\s' > self_doc/bin/gitwebbyupd/README
+tests/ftr_artifacts.bash |  grep -v '^\s' > self_doc/tests/ftr_artifacts.bash/README
 ```
 
 \* arguably a literate program for reasons found in self_docs/README.md.
