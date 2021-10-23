@@ -6,7 +6,8 @@ function techo { echo $'\t' "$@"; }
 function ttecho { echo $'\t' $'\t' "$@"; }
 
 echo
-echo PARSE ARG ENV VARS ...
+echo PARSE ARG ENV VARS
+echo DEFINE PROGRAM VARS ...
 {
     # obtain script path
     pth="$(pwd)";cd $(dirname "$0");
@@ -104,6 +105,9 @@ echo PARSE ARG ENV VARS ...
     cd - 1>>/dev/null
     dotdir="${upd}/.gitwebby"
     datdir="${upd}/data"
+    bt=$'`'  # backtick
+    vt=$'\v' # vertical-tab
+    btrepl="<"$'<'"gitwebby_backtick"">"$'>'
 }
 echo ... DONE
 
@@ -310,7 +314,11 @@ echo FIND FILES, WRITE JS FOR MANIFESTS
 echo ... DONE
 
 echo
-echo WRITE JS FOR FILES
+echo WRITE FILE CONTENTS TO DATA JS FILES
+echo WITH THE FOLLOWING STRING REPLACEMENTS
+echo 1.\ '`' BECOMES \$\{btrepl\}
+echo 2.\ \$\{ BECOMES \$\\v\{
+echo 3.\ \$\{btrepl\} BECOMES '`'
 {
     cmmtn=$(ls "${dotdir}/lkp/fl" | wc -l)
     cmmti=0
@@ -367,7 +375,7 @@ echo WRITE JS FOR FILES
 
             # PERF_OPTIMIZE
             echo "window.CMMT_MANIF['${c}'].push({fhash:'${fhash}', fnm:'${f}'});" >>"${datdir}/c_${c}.cmmtmanifest.js"
-            esc_content=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
+            esc_content=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'$'\v''{/g')  #  sed "s/[\\]*${bt}/\\\\${bt}/g"
             echo "$content" >"${dotdir}/f_${fhash}.txt"
             ftype=$(file "${dotdir}/f_${fhash}.txt"| cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
             ff=""  # ftype filtered
@@ -387,9 +395,9 @@ echo WRITE JS FOR FILES
                 overwrite="file content ommitted for file type: <${ff}>"
                 echo "$overwrite">"${dotdir}/f_${fhash}.txt"
             fi
-            echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${esc_content}\`;" >"${datdir}/f_${fhash}.js"
+            echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=String.raw\`${esc_content}\`.replaceAll('${btrepl}', '${bt}');" >"${datdir}/f_${fhash}.js"
             if [[ -n "$overwrite" ]]; then
-                echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=\`${overwrite}\`;" >"${datdir}/f_${fhash}.js"
+                echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=String.raw\`${overwrite}\`.replaceAll('${btrepl}', '${bt}');" >"${datdir}/f_${fhash}.js"
             fi
         done
     done
@@ -512,7 +520,12 @@ descr'
 echo ... DONE
 
 echo
-echo PROCESS DIFFS
+echo PROCESS DIFFS BY PARSING COMMIT DIFFS AND
+echo WRITE INDIVIDUAL FILE DIFF CONTENTS TO DATA JS FILES
+echo WITH THE FOLLOWING STRING REPLACEMENTS
+echo 1.\ '`' BECOMES \$\{btrepl\}
+echo 2.\ \$\{ BECOMES \$\\v\{
+echo 3.\ \$\{btrepl\} BECOMES '`'
 {
     # PRODUCE FILE DIFFS
     # PERF_OPTIMIZATION (use lookup file instead of extra nesting)
@@ -527,9 +540,9 @@ echo PROCESS DIFFS
     do
         ((diffi++))
         if [[ "${diffi:${#diffi}-1:1}" = "1" ]]; then
-            echo "processing diffs..${diffi} of ${diffcnt}"
+            techo "processing diffs..${diffi} of ${diffcnt}"
         elif [[ $diffi -eq $diffcnt ]]; then
-            echo "processing diffs..${diffi} of ${diffcnt}"
+            techo "processing diffs..${diffi} of ${diffcnt}"
         fi
         bnm=$(basename "$f")
         cmmt="${bnm%.*}"
@@ -564,8 +577,8 @@ echo PROCESS DIFFS
                 # echo "fp: ${line}"
                 if [[ -n "$fp" ]]; then
                     # flush process
-                    diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g'  | sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
-                    echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
+                    diff_content_js=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'$'\v''{/g')  #  | sed 's/`/\\`/g' | sed "s/\\\\${bt}/\\${vt}\\${bt}/g" 
+                    echo "$hdr'$fnm']=String.raw\`${diff_content_js}\`.replaceAll('${btrepl}', '${bt}');" >"$datdir/$fnm.js"
                     content=""
                     fp=""
                     normnm=""
@@ -628,9 +641,8 @@ echo PROCESS DIFFS
         done
         # flush process
         if [[ flushed -eq 0 ]]; then
-            diff_content_js=$(echo "$content" | sed 's/`/\\`/g' | sed 's/\\\\`/\\\\\\/g' | sed 's/${/$'$'\v''{/g')  # replace dollar open-curly with dollar vert tab open-curly
-            # sed 's/${/\\${/g' | sed 's/\\\\${/\\\\\\/g')
-            echo "$hdr'$fnm']=\`${diff_content_js}\`" >"$datdir/$fnm.js"
+            diff_content_js=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'$'\v''{/g')  # | sed 's/`/\\`/g' | sed "s/\\\\${bt}/\\${vt}\\${bt}/g"
+            echo "$hdr'$fnm']=String.raw\`${diff_content_js}\`.replaceAll('${btrepl}', '${bt}');" >"$datdir/$fnm.js"
             flushed=0
         fi
         content=""

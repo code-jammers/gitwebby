@@ -21,13 +21,17 @@ mkdir data
 cd data
 found=0
 touch a_ignore.txt
+fnm=
 for f in a_*.txt
 do
     if [[ $f = a_ignore.txt ]]; then
         continue
     fi
     found=1
+    fnm="$f"
     break
 done
 
+val=$(cat "$fnm")
+if [[ "$val" -eq 1 ]]; then :; else found=0; fi
 if [[ $found -gt 0 ]]; then echo "  PASS"; else echo "  FAIL"; fi

@@ -24,6 +24,10 @@ echo '*.js test (will take a few mins)'
 failcd=0
 for jsfile in ${data}/*.js;
 do
+    fnm=$(basename "$jsfile")
+    if [[ "${fnm:0:2}" = "a_" ]]; then
+        continue  # don't test artifact files
+    fi
     echo "test: $jsfile" >>"${root}/.gitwebby/validjs.log"
     cat "$win" "$jsfile" | node 2>>"${root}/.gitwebby/validjs.log"
     excd=$?
