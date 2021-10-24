@@ -1,0 +1,23 @@
+
+VALID JS TEST
+0. RM SCRIPT-SOURCE-DIR/../.gitwebby AND SCRIPT-SOURCE-DIR/../data
+TO ENSURE FILES FROM LATEST CODE ARE CREATED.
+1. RUN COMMAND BASED BASED ON SCRIPT SOURCE RELATIVE PATH
+WHICH WILL GENERATE JS DATA FILES IN ../data AND
+HAVE IT UPDATE THE LITERATE PROGRAMMING SELF DOC
+../bin/gitwebbyupd ../../ ../ |grep -v '^\s' > "self_doc/bin/gitwebbyupd/README"
+2. SEND CONTENTS OF ../data/repos.js TO node COMMAND AND TEST FOR FAILURE
+3. SEND CONTENTS OF ../data/branches.js TO node COMMAND AND TEST FOR FAILURE
+4. FOREACH JS FILE IN ../data/*.js SEND TO node COMMAND AND TEST FOR FAILURE
+5. ERROR LOGGING WILL BE STORED IN ../.gitwebby/validjs.log
+...
+/home/korey/kh/gitwebby
+
+repos.js test
+
+branches.js test
+
+*.js test (will take a few mins)
+
+For errors check /home/korey/kh/gitwebby/.gitwebby/validjs.log
+... DONE

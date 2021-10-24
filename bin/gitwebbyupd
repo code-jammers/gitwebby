@@ -6,63 +6,60 @@ function techo { echo $'\t' "$@"; }
 function ttecho { echo $'\t' $'\t' "$@"; }
 
 echo
-echo PARSE ARG ENV VARS
-echo DEFINE PROGRAM VARS ...
+echo GITWEBBY UPDATE SCRIPT
+echo STARTING LOCAL DEPLOYMENT OF A WEB BROWSABLE VERSION OF YOUR SOURCE CODE
+echo GIT REPOSITORIES.
+
+echo
+echo 1. PARSE ARG ENV VARS
+echo OPT ARG --proj=0 is the first command argument and it is optional
+echo - --proj=1 means there is 1 folder "in" between the root of the repo dirs
+echo ...and the individual repo dirs.
+echo - --proj=2 means there are 2 folders "in" between the root of the repo dirs
+echo ...and the individual repo dirs.
+echo 1ST PATH ARG is required and it is the path to your root of repositories
+echo ...and must have n \(from --proj=n, omitted default is 0\) directories in-
+echo ...between the root and an actual repository directory. The root folder
+echo ...name will be the display name above your list of repositories "in" the
+echo ...GitWebby UI.
+echo 2ND PATH ARG is required and is the path to your local gitwebby instance
+echo ...\(gitwebby code repository\).
+echo - GITWEBBY_FORCE env var, 1 means force all files to write without skipping
+echo - GITWEBBY_REMOTE env var, 1 means to include remote branches
+echo - GITWEBBY_1BRANCH env var, 1 means to only process 1 branch per repo
+echo 2. DEFINE PROGRAM VARS
+echo - bt, back-tick
+echo - btrepl, back-tick replacement unique id tag
+echo - datdir, data dir
+echo - dotdir, .gitwebby dir
+echo - n, --proj=n number of intermediary directories between root and repo
+echo - rpd, repository list directory \(arg1\)
+echo - rtd, return directory \("in" case running as source script\)
+echo - upd, update directory \(arg2\)
+echo - vt, vertical-tab
+echo - vtrepl, vertical-tab replacement unique id tag
+echo ...
 {
     # obtain script path
     pth="$(pwd)";cd $(dirname "$0");
     script="$(pwd)";cd $pth;
     # env variable overrides
-    : ${GITWEBBY_FORCE:=0}  # set to 1 to force all files to write without skipping
-    : ${GITWEBBY_REMOTE:=0}  # set 1 to include remote branches
-    : ${GITWEBBY_1BRANCH:=0}  # set to 1 to only process 1 branch
+    : ${GITWEBBY_FORCE:=0}
+    : ${GITWEBBY_REMOTE:=0}
+    : ${GITWEBBY_1BRANCH:=0}
 
     techo "GITWEBBY_1BRANCH $GITWEBBY_1BRANCH"
     techo "GITWEBBY_FORCE   $GITWEBBY_FORCE"
     techo "GITWEBBY_REMOTE  $GITWEBBY_REMOTE"
 
-    rtd=$(pwd)    # return directory
+    rtd=$(pwd)
     n=0
     if [[ "${1:0:7}" = "--proj=" ]]; then
         n="${1:7}"
         shift
     fi
-    rpd="${1%/}"  # repositories' parent directory
-    upd="${2%/}"  # update directory
-
-    help=0
-    if [[ "-h" = "$1" ]]; then
-        help=1
-    fi
-    if [[ "--help" = "$1" ]]; then
-        help=1
-    fi
-    if [[ $help -eq 1 ]]; then
-        echo "gitwebbyupd will locally deploy web browsable versions of your code"
-        echo "for your local git repositories."
-        echo
-        echo "If all of your repositories are contained in ~/repos and"
-        echo "you want to deploy to ~/www/gitwebby you would run:"
-        echo "    bin/gitwebbyupd ~/repos ~/www/gitwebby"
-        echo "If your repos are organized by project, ie: ~/projects/work, ~/projects/home"
-        echo "you can run like so:"
-        echo "    bin/gitwebbyupd --proj=1 ~/projects ~/www/gitwebby"
-        echo "If your repos are organized by platform,"
-        echo "ie: ~/repo-hosts/github/usersname, ~/repo-hosts/gitlab/usersname"
-        echo "you can run like so:"
-        echo "    bin/gitwebbyupd --proj=2 ~/repo-hosts ~/www/gitwebby"
-        echo
-        echo "A gitwebby instance requires that all repositories follow the same"
-        echo "folder organization. You can have as many nested folders (--proj=n)."
-        echo "You can combine uniformly-structured folders listed in different places"
-        echo "by creating a single folder that contains soft symbolic links to all "
-        echo "your git repository folders without having multiple git repo copies, like so:"
-        echo "    mkdir ~/gitwebby-refs"
-        echo "    ln -s ~/repos ~/gitwebby-refs/repos"
-        echo "    ln -s ~/shared-repos ~/gitwebby-refs/shared-repos"
-        echo "    bin/gitwebbyupd --proj=1 ~/gitwebby-refs ~/www/gitwebby"
-        exit 0;
-    fi
+    rpd="${1%/}"
+    upd="${2%/}"
 
     valid=1
     if [[ ! -d "$rpd" ]]; then
@@ -72,29 +69,11 @@ echo DEFINE PROGRAM VARS ...
         valid=0
     fi
     if [[ $valid -eq 0 ]]; then
-        echo "Error: invalid directories specified." 1>&2
-        echo "Standard Usage:"
-        echo "    # Directory Structure:"
-        echo "    #   repos_dir/X/.git"
-        echo "    #   repos_dir/Y/.git"
-        echo "    bin/gitwebbyupd repos_dir deploy_dir"
-        echo "Project Usage:"
-        echo "    # 1 Project Directory Structure:"
-        echo "    #   proj_dir/projA/repos_dir/X/.git"
-        echo "    #   proj_dir/projA/repos_dir/Y/.git"
-        echo "    #   proj_dir/projB/repos_dir/X/.git"
-        echo "    #   proj_dir/projB/repos_dir/Y/.git"
-        echo "    bin/gitwebbyupd --proj=1 proj_dir deploy_dir"
-        echo "    # 2 Project Directory Structure:"
-        echo "    #   platf_dir/platfA/projA/repos_dir/X/.git"
-        echo "    #   platf_dir/platfA/projA/repos_dir/Y/.git"
-        echo "    #   platf_dir/platfA/projB/repos_dir/X/.git"
-        echo "    #   platf_dir/platfA/projB/repos_dir/Y/.git"
-        echo "    #   platf_dir/platfB/projA/repos_dir/X/.git"
-        echo "    #   platf_dir/platfB/projA/repos_dir/Y/.git"
-        echo "    #   platf_dir/platfB/projB/repos_dir/X/.git"
-        echo "    #   platf_dir/platfB/projB/repos_dir/Y/.git"
-        echo "    bin/gitwebbyupd --proj=2 platf_dir deploy_dir"
+        techo 1>&2
+        techo "Error: invalid directories specified." 1>&2
+        techo "Standard Usage:" 1>&2
+        techo "  bin/gitwebbyupd --proj=0 root_of_all_repos_dir deploy_dir" 1>&2
+        techo "where n in --proj=n is the number of directories in-between the path of the root_of_all_repos_dir and an actual source repository folder path." 1>&2
         exit 1;
     fi
     cd "${upd}" 1>>/dev/null
@@ -105,15 +84,20 @@ echo DEFINE PROGRAM VARS ...
     cd - 1>>/dev/null
     dotdir="${upd}/.gitwebby"
     datdir="${upd}/data"
-    bt=$'`'  # backtick
-    vt=$'\v' # vertical-tab
+    bt=$'`'
+    vt=$'\v'
     btrepl="<"$'<'"gitwebby_backtick"">"$'>'
     vtrepl="<"$'<'"gitwebby_verttab"">"$'>'
 }
 echo ... DONE
 
 echo
-echo FIND REPO LIST NAME ...
+echo FIND REPO LIST NAME
+echo 1. CREATE .gitwebby/lkp/dc FOLDER HIERARCHY
+echo 2. EMPTY .gitwebby/repos.txt FILE
+echo 3. repolistnm = BASE NAME OF rpd
+echo 4. STORE repolistnm IN data/repo-list.js FILE
+echo ...
 {
     mkdir -p "$dotdir"
     mkdir -p "$datdir"
@@ -129,6 +113,14 @@ echo ... DONE
 
 echo
 echo FIND REPO PATHS
+echo np1 IS n \(--proj=n\) PLUS 1
+echo TRAVERSAL: lst STARTS AS ls rpd
+echo i IS 0
+echo WHILE i IS LESS THAN OR EQUAL TO np1
+echo ...ITERATE dir AS ls lst
+echo ......IF i IS n THEN ADD TO REPO-LIST
+echo ......ELSE APPEND ls dir TO lst
+echo ...
 {
     lst="${rpd}"
     
@@ -176,7 +168,15 @@ ${newlst}"
 echo ... DONE
 
 echo
-echo FIND BRANCHES ...
+echo FIND BRANCHES
+echo FOR fullp IN .gitwebby/repo-paths.txt
+echo ...branches = LIST BRANCHES IN fullp \(git branch\)
+echo ...mbranch = CURRENT BRANCH IN fullp \(git rev-parse --abbrev-ref HEAD\)
+echo ...norm_name IS NORMALIZED fullp THAT CAN BE SAVED AS A FILENAME
+echo ...mb_lkp IS MAIN BRANCH LOOKUP STORED IN .gitwebby/lkp/mb/norm_name.txt
+echo ...ab_lkp IS ALL BRANCH LOOKUP STORED IN  .gitwebby/lkp/ab/norm_name.txt
+echo ...LOOKUP IS CREATED WITH CONTENT: fullp TAB \{mbranch\|branches\}
+echo ...
 {
     # mb => main branch lookup
     # ab => all branch lookup
@@ -213,7 +213,14 @@ echo FIND BRANCHES ...
 echo ... DONE
 
 echo
-echo FIND COMMITS ...
+echo FIND COMMITS
+echo FOR ab IN .gitwebby/lkp/ab/\*.txt
+echo ...EXTRACT branches FROM FILE
+echo ...FOR b in branches
+echo ......tab VAR IS TAB
+echo ......commits \(git log b --pretty=format:$'%H$tab%an$tab%aI$tab%s'\)
+echo ......CREATE LOOKUP .gitwebby/lkp/cmmt/${norm_name}.${b}.txt"
+echo ...
 {
     nl=$'\n'
     tab=$'\t'
@@ -316,6 +323,11 @@ echo ... DONE
 
 echo
 echo WRITE FILE CONTENTS TO DATA JS FILES
+echo EXCEPT FOR NON-TEXT FILES
+echo \(THE \`file --list\` COMMAND SHOWS SOURCE CODE FILES ARE REPORTED WITH
+echo \'text\' IN THE OUTPUT WHEN RUNNING \`file filename\` SO WE DETERMINE
+echo IF IT IS A TEXT FILE BY SEARCHING FOR \'text\' IN THE OUTPUT OF THE file
+echo COMMAND\)
 echo WITH THE FOLLOWING STRING REPLACEMENTS
 echo 0.\ btrepl VARIABLE IS A UNIQUE ID UNLIKELY TO BE FOUND IN SOURCE CODE
 echo a.\ vtrepl VARIABLE IS A UNIQUE ID UNLIKELY TO BE FOUND IN SOURCE CODE
@@ -377,6 +389,8 @@ echo b.\ TCS.replaceAll\(\$\{vtrepl\}, "'')"
             # _}
             content=$(git show "${c}:${f}" | tr -d '\0' | cat)
             ext=$([[ "$f" = *.* ]] && echo ".${f##*.}" || echo '')
+            slash=$(echo "$ext" | grep "/")
+            if [[ -n "$slash" ]]; then ext=''; fi
             (git show "${c}:${f}" > "${datdir}/a_${fhash}${ext}")
 
             # PERF_OPTIMIZE
@@ -384,22 +398,12 @@ echo b.\ TCS.replaceAll\(\$\{vtrepl\}, "'')"
             esc_content=$(echo "$content" | sed "s/${bt}/${btrepl}/g" | sed 's/${/$'${vtrepl}'{/g')  #  sed "s/[\\]*${bt}/\\\\${bt}/g"
             echo "$content" >"${dotdir}/f_${fhash}.txt"
             ftype=$(file "${dotdir}/f_${fhash}.txt"| cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
-            ff=""  # ftype filtered
-            ff="$ff"$(echo "$ftype" | grep "MIDI")
-            ff="$ff"$(echo "$ftype" | grep "MPEG")
-            ff="$ff"$(echo "$ftype" | grep "XCF")
-            ff="$ff"$(echo "$ftype" | grep "GIF")
-            ff="$ff"$(echo "$ftype" | grep "Audio file")
+            ftype_text=$(echo "$ftype" | grep text | wc -l)
             overwrite=""
-            if [[ "$ftype" = "data" ]]; then
+            if [[ $ftype_text -eq 0 ]]; then
                 # overwrite contents with file type
                 overwrite="file content ommitted for file type: <${ftype}>"
                 echo "$overwrite" >"${dotdir}/f_${fhash}.txt"
-            fi
-            if [[ -n "$ff" ]]; then
-                # overwrite contents with file type
-                overwrite="file content ommitted for file type: <${ff}>"
-                echo "$overwrite">"${dotdir}/f_${fhash}.txt"
             fi
             echo "if(window.FILES==null){window.FILES={};}window.FILES['${fhash}']=String.raw\`${esc_content}\`.replaceAll('${btrepl}', '${bt}').replaceAll('${vtrepl}', '');" >"${datdir}/f_${fhash}.js"
             if [[ -n "$overwrite" ]]; then

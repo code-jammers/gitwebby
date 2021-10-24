@@ -1,0 +1,8 @@
+/home/korey/kh/gitwebby
+/home/korey/kh/gitwebby
+
+FEATURE TESTS
+RUN EACH ftr_*.bash file IN SCRIPT-SOURCE-DIR/
+AND SAVE LITERATE PROGRAMMNIG OUTPUT WITHIN SCRIPT-SOURCE-DIR/../self_doc
+...
+... DONE
