@@ -53,10 +53,24 @@ WHILE i IS LESS THAN OR EQUAL TO np1
 ... DONE
 
 FIND BRANCHES
+FOR fullp IN .gitwebby/repo-paths.txt
+...branches = LIST BRANCHES IN fullp (git branch)
+...mbranch = CURRENT BRANCH IN fullp (git rev-parse --abbrev-ref HEAD)
+...norm_name IS NORMALIZED fullp THAT CAN BE SAVED AS A FILENAME
+...mb_lkp IS MAIN BRANCH LOOKUP STORED IN .gitwebby/lkp/mb/norm_name.txt
+...ab_lkp IS ALL BRANCH LOOKUP STORED IN .gitwebby/lkp/ab/norm_name.txt
+...LOOKUP IS CREATED WITH CONTENT: fullp TAB {mbranch|branches}
 ...
 ... DONE
 
-FIND COMMITS ...
+FIND COMMITS
+FOR ab IN .gitwebby/lkp/ab/*.txt
+...EXTRACT branches FROM FILE
+...FOR b in branches
+......tab VAR IS TAB
+......commits (git log b --pretty=format:%H$tab%an$tab%aI$tab%s)
+......CREATE LOOKUP .gitwebby/lkp/cmmt/trick-or-squeak..txt
+...
 ... DONE
 
 FIND FILES, WRITE JS FOR MANIFESTS

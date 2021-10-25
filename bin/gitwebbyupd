@@ -219,7 +219,7 @@ echo ...EXTRACT branches FROM FILE
 echo ...FOR b in branches
 echo ......tab VAR IS TAB
 echo ......commits \(git log b --pretty=format:$'%H$tab%an$tab%aI$tab%s'\)
-echo ......CREATE LOOKUP .gitwebby/lkp/cmmt/${norm_name}.${b}.txt"
+echo ......CREATE LOOKUP .gitwebby/lkp/cmmt/${norm_name}.${b}.txt
 echo ...
 {
     nl=$'\n'

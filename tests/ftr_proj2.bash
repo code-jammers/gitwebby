@@ -4,14 +4,15 @@ ss="$_"  # script source
 sd=$(dirname "$ss")  # script dir
 rd=$(dirname "$sd")  # repo dir
 
-cd "$sd"
+cd "$sd" >>/dev/null
 sd=$(pwd)
-cd -
+cd - >>/dev/null
 
-cd "$rd"
+cd "$rd" >>/dev/null
 rd=$(pwd)
-cd -
+cd - >>/dev/null
 
+echo
 echo PROJ2 \(--proj=2\) FEATURE TEST
 echo 1. CLONE gitwebby CODE IN NESTED HIERARCHIES:
 echo - proj2_dir = SCRIPT_SOURCE_DIR/../.gitwebby/proj2/

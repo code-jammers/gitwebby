@@ -12,16 +12,16 @@ echo 1. RUN COMMAND BASED BASED ON SCRIPT SOURCE RELATIVE PATH
 echo WHICH WILL GENERATE JS DATA FILES IN ../data AND
 echo HAVE IT UPDATE THE LITERATE PROGRAMMING SELF DOC
 echo "../bin/gitwebbyupd ../../ ../ |grep -v '^\s' > \"${root}self_doc/bin/gitwebbyupd/README\""
-echo 2. SEND CONTENTS OF ../data/repos.js TO node COMMAND AND TEST FOR FAILURE
-echo 3. SEND CONTENTS OF ../data/branches.js TO node COMMAND AND TEST FOR FAILURE
-echo 4. FOREACH JS FILE IN ../data/\*.js SEND TO node COMMAND AND TEST FOR FAILURE
+echo 2. SEND CONTENTS OF ../data/repos.js TO node COMMAND AND TEST EXIT STATUS
+echo 3. SEND CONTENTS OF ../data/branches.js TO node COMMAND AND TEST EXIT STATUS
+echo 4. FOREACH JS FILE IN ../data/\*.js SEND TO node COMMAND AND TEST EXIT STATUS
 echo 5. ERROR LOGGING WILL BE STORED IN ../.gitwebby/validjs.log
 echo ...
 {
     root="$rd"
-    cd "$root"
+    cd "$root" >>/dev/null
     root=$(pwd)
-    cd -
+    cd - >>/dev/null
     win="${root}/tests/window.js"
     data="${root}/data"
 
