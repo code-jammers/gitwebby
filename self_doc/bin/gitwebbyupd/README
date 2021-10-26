@@ -74,6 +74,18 @@ FOR ab IN .gitwebby/lkp/ab/*.txt
 ... DONE
 
 FIND FILES, WRITE JS FOR MANIFESTS
+b IS BRANCH NAME, c IS COMMIT HASH, normname is normalized repo name
+fl DIR STORES COMMITTED FILENAMES
+FOR cmmt IN .gitwebby/lkp/cmmt
+...COMMIT MANIF = (git show --pretty=format: --name-only cmmt)
+...STORE COMMIT_MANIF IN .gitwebby/lkp/fl
+...CREATE TXT FILES IN .gitwebby/lkp/fl/normname.b.c.txt
+...FOR frec IN SNAPSHOT (git ls-tree -r | cut -d   -f 3-4)
+......SAVE SNAPSHOT FILENAMES TO SNAP_MANIF IN JS
+... STORE DIFF IN (git show --unified=0 c >.gitwebby/lkp/dc/c.diff)
+A COMMIT MANIFEST LIST ONLY FILES ADDED/DELETED/MODIFIED IN THE COMMIT
+A SNAPSHOT MANIFEST LISTS EVERY FILE IN EXISTENCE AT THE TIME OF COMMIT
+...
 ... DONE
 
 WRITE FILE CONTENTS TO DATA JS FILES
@@ -94,9 +106,22 @@ b. TCS.replaceAll(${vtrepl}, '')
 ... DONE
 
 WRITE INFO FOR REPOS LIST
+FOR fullp IN .gitwebby/repo-paths.txt
+...EXTRACT name FROM fullp
+...EXTRACT readme FROM ls
+...EXTRACT descr FROM INITIAL readme LINES
+...EXTRACT authors FROM (git log --pretty=format:%an)
+...EXTRACT mod_date FROM (git log --date=iso-strict)
+...STORE ALL COMMIT FIELDS IN TAB-DELIMITED .gitwebby/repos.txt
+...
 ... DONE
 
 WRITE JS FOR REPOS LIST
+b IS BRANCH NAME, normname IS NORMALIZED REPO NAME
+FOR reporec in .gitwebby/repos.txt
+...PLACE TABBED DATA INTO 'COMMITS' JS VAR
+OUTPUTS: data/normname.b.commits.js data/repos.js data/branches.js
+...
 ... DONE
 
 PROCESS DIFFS BY PARSING COMMIT DIFFS AND

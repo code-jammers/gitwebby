@@ -259,6 +259,18 @@ echo ... DONE
 
 echo
 echo FIND FILES, WRITE JS FOR MANIFESTS
+echo b IS BRANCH NAME, c IS COMMIT HASH, normname is normalized repo name
+echo fl DIR STORES COMMITTED FILENAMES
+echo FOR cmmt IN .gitwebby/lkp/cmmt
+echo ...COMMIT MANIF = \(git show --pretty="format:" --name-only cmmt\)
+echo ...STORE COMMIT_MANIF IN .gitwebby/lkp/fl
+echo ...CREATE TXT FILES IN .gitwebby/lkp/fl/normname.b.c.txt
+echo ...FOR frec IN SNAPSHOT \(git ls-tree -r $c \| cut -d ' ' -f 3-4\)
+echo ......SAVE SNAPSHOT FILENAMES TO SNAP_MANIF IN JS
+echo ... STORE DIFF IN \(git show --unified=0 c \>.gitwebby/lkp/dc/c.diff\)
+echo A COMMIT MANIFEST LIST ONLY FILES ADDED/DELETED/MODIFIED IN THE COMMIT
+echo A SNAPSHOT MANIFEST LISTS EVERY FILE IN EXISTENCE AT THE TIME OF COMMIT
+echo ...
 {
     mkdir -p "${dotdir}/lkp/fl"  # file lookup
     rm "${dotdir}/lkp/fl/*.txt" 1>>/dev/null 2>>/dev/null
@@ -417,6 +429,14 @@ echo ... DONE
 
 echo
 echo WRITE INFO FOR REPOS LIST
+echo FOR fullp IN .gitwebby/repo-paths.txt
+echo ...EXTRACT name FROM fullp
+echo ...EXTRACT readme FROM ls
+echo ...EXTRACT descr FROM INITIAL readme LINES
+echo ...EXTRACT authors FROM \(git log --pretty=format:%an\)
+echo ...EXTRACT mod_date FROM \(git log --date=iso-strict\)
+echo ...STORE ALL COMMIT FIELDS IN TAB-DELIMITED .gitwebby/repos.txt
+echo ...
 {
     for fullp in `cat "${dotdir}/repo-paths.txt"`
     do
@@ -459,6 +479,11 @@ echo ... DONE
 
 echo
 echo WRITE JS FOR REPOS LIST
+echo b IS BRANCH NAME, normname IS NORMALIZED REPO NAME
+echo FOR reporec in .gitwebby/repos.txt
+echo ...PLACE TABBED DATA INTO \'COMMITS\' JS VAR
+echo OUTPUTS: data/normname.b.commits.js data/repos.js data/branches.js
+echo ...
 {
     repojs="window.REPOS=["
     rjs="window.BRANCHES={"
