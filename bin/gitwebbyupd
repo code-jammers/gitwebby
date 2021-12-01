@@ -4,6 +4,18 @@
 
 function techo { echo $'\t' "$@"; }
 function ttecho { echo $'\t' $'\t' "$@"; }
+function path_lastn_sep {
+    in_name="$1"
+    n=$2
+    sep=$3
+
+    seplen="${#sep}"
+    name="$in_name"
+    nnm=""  # normalized name
+    _i=0
+    while [[ $_i -le $n ]]; do     bnm=$(basename "$name");     nnm="${sep}${bnm}${nnm}";     name=$(dirname "$name"); ((_i++)); done
+    echo "${nnm:$seplen}"
+}
 
 echo
 echo GITWEBBY UPDATE SCRIPT
@@ -189,7 +201,7 @@ echo ...
     for fullp in `cat "${dotdir}/repo-paths.txt"`
     do
         cd "$fullp"
-        norm_name=$(basename "$fullp" | sed 's/\//__/g')
+        norm_name=$(path_lastn_sep "$fullp" $n "__")  #$(basename "$fullp" | sed 's/\//__/g')
         mbranch=$(git rev-parse --abbrev-ref HEAD)
         branches=""
         branch_filt="--list"
@@ -232,7 +244,7 @@ echo ...
         branch_info=$(cat "$ab")
         fullp=$(echo "$branch_info" | head -1 | cut -d $'\t' -f 1)
         branches=$(echo "$branch_info" | cut -d $'\t' -f 2)
-        norm_name=$(basename "$fullp" | sed 's/\//__/g')
+        norm_name=$(path_lastn_sep "$fullp" $n "__")  # $(basename "$fullp" | sed 's/\//__/g')
 
         cd "$fullp"
         for b in `echo "$branches"`
@@ -286,7 +298,7 @@ echo ...
         first_line=$(cat "$cmmt_info" | head -1)
         fullp=$(echo "$first_line" | cut -d $'\t' -f 1)
         cd "$fullp"
-        normname=$(basename "$fullp" | sed 's/\//__/g')
+        normname=$(path_lastn_sep "$fullp" $n "__")  # $(basename "$fullp" | sed 's/\//__/g')
         b=$(echo "$first_line" | cut -d $'\t' -f 2)
         remaining_lines=$(cat "$cmmt_info" | tail -n +2)
         commits=$(echo "$remaining_lines" | sed "s/'//g")
@@ -364,7 +376,7 @@ echo b.\ TCS.replaceAll\(\$\{vtrepl\}, "'')"
         file_info=$(cat "$file_info_file")
         first_line=$(echo "$file_info" | head -1)
         fullp=$(echo "$first_line" | cut -d $'\t' -f 1)
-        normname=$(basename "$fullp" | sed 's/\//__/g')
+        normname=$(path_lastn_sep "$fullp" $n "__")  # $(basename "$fullp" | sed 's/\//__/g')
         b=$(echo "$first_line" | cut -d $'\t' -f 2)
         c=$(echo "$first_line" | cut -d $'\t' -f 3)
         remaining_lines=$(echo "$file_info" | tail -n +2)
@@ -441,7 +453,8 @@ echo ...
     for fullp in `cat "${dotdir}/repo-paths.txt"`
     do
         cd "$fullp"
-        name=$(basename "$fullp" | sed 's/\//__/g')
+        name="$fullp"  # $(basename "$fullp" | sed 's/\//__/g')
+        name=$(path_lastn_sep "$fullp" $n '/')
         readme=$(ls | grep -i readme | head -1)
         descr=""
         if [[ -n "$readme" ]]; then
@@ -511,7 +524,7 @@ descr'
             ((i++))
         done
         repojs="${repojs}},"
-        normname=$(echo "$name" | sed 's/\//__/g')
+        normname=$(path_lastn_sep "$name" $n "__")  # $(echo "$name" | sed 's/\//__/g')
         mainb=$(cat "${dotdir}/${normname}.m.txt")
         rjs="${rjs}'$normname':{main:'${mainb}',branches:["
         for b in `cat "${dotdir}/${normname}.b.txt"`;
