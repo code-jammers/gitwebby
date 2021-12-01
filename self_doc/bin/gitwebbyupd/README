@@ -1,24 +1,99 @@
 
-PARSE ARG ENV VARS
-DEFINE PROGRAM VARS ...
+GITWEBBY UPDATE SCRIPT
+STARTING LOCAL DEPLOYMENT OF A WEB BROWSABLE VERSION OF YOUR SOURCE CODE
+GIT REPOSITORIES.
+
+1. PARSE ARG ENV VARS
+OPT ARG --proj=0 is the first command argument and it is optional
+- --proj=1 means there is 1 folder in between the root of the repo dirs
+...and the individual repo dirs.
+- --proj=2 means there are 2 folders in between the root of the repo dirs
+...and the individual repo dirs.
+1ST PATH ARG is required and it is the path to your root of repositories
+...and must have n (from --proj=n, omitted default is 0) directories in-
+...between the root and an actual repository directory. The root folder
+...name will be the display name above your list of repositories in the
+...GitWebby UI.
+2ND PATH ARG is required and is the path to your local gitwebby instance
+...(gitwebby code repository).
+- GITWEBBY_FORCE env var, 1 means force all files to write without skipping
+- GITWEBBY_REMOTE env var, 1 means to include remote branches
+- GITWEBBY_1BRANCH env var, 1 means to only process 1 branch per repo
+2. DEFINE PROGRAM VARS
+- bt, back-tick
+- btrepl, back-tick replacement unique id tag
+- datdir, data dir
+- dotdir, .gitwebby dir
+- n, --proj=n number of intermediary directories between root and repo
+- rpd, repository list directory (arg1)
+- rtd, return directory (in case running as source script)
+- upd, update directory (arg2)
+- vt, vertical-tab
+- vtrepl, vertical-tab replacement unique id tag
+...
 ... DONE
 
-FIND REPO LIST NAME ...
+FIND REPO LIST NAME
+1. CREATE .gitwebby/lkp/dc FOLDER HIERARCHY
+2. EMPTY .gitwebby/repos.txt FILE
+3. repolistnm = BASE NAME OF rpd
+4. STORE repolistnm IN data/repo-list.js FILE
+...
 ... DONE
 
 FIND REPO PATHS
+np1 IS n (--proj=n) PLUS 1
+TRAVERSAL: lst STARTS AS ls rpd
+i IS 0
+WHILE i IS LESS THAN OR EQUAL TO np1
+...ITERATE dir AS ls lst
+......IF i IS n THEN ADD TO REPO-LIST
+......ELSE APPEND ls dir TO lst
+...
 ... DONE
 
-FIND BRANCHES ...
+FIND BRANCHES
+FOR fullp IN .gitwebby/repo-paths.txt
+...branches = LIST BRANCHES IN fullp (git branch)
+...mbranch = CURRENT BRANCH IN fullp (git rev-parse --abbrev-ref HEAD)
+...norm_name IS NORMALIZED fullp THAT CAN BE SAVED AS A FILENAME
+...mb_lkp IS MAIN BRANCH LOOKUP STORED IN .gitwebby/lkp/mb/norm_name.txt
+...ab_lkp IS ALL BRANCH LOOKUP STORED IN .gitwebby/lkp/ab/norm_name.txt
+...LOOKUP IS CREATED WITH CONTENT: fullp TAB {mbranch|branches}
+...
 ... DONE
 
-FIND COMMITS ...
+FIND COMMITS
+FOR ab IN .gitwebby/lkp/ab/*.txt
+...EXTRACT branches FROM FILE
+...FOR b in branches
+......tab VAR IS TAB
+......commits (git log b --pretty=format:%H$tab%an$tab%aI$tab%s)
+......CREATE LOOKUP .gitwebby/lkp/cmmt/trick-or-squeak..txt
+...
 ... DONE
 
 FIND FILES, WRITE JS FOR MANIFESTS
+b IS BRANCH NAME, c IS COMMIT HASH, normname is normalized repo name
+fl DIR STORES COMMITTED FILENAMES
+FOR cmmt IN .gitwebby/lkp/cmmt
+...COMMIT MANIF = (git show --pretty=format: --name-only cmmt)
+...STORE COMMIT_MANIF IN .gitwebby/lkp/fl
+...CREATE TXT FILES IN .gitwebby/lkp/fl/normname.b.c.txt
+...FOR frec IN SNAPSHOT (git ls-tree -r | cut -d   -f 3-4)
+......SAVE SNAPSHOT FILENAMES TO SNAP_MANIF IN JS
+... STORE DIFF IN (git show --unified=0 c >.gitwebby/lkp/dc/c.diff)
+A COMMIT MANIFEST LIST ONLY FILES ADDED/DELETED/MODIFIED IN THE COMMIT
+A SNAPSHOT MANIFEST LISTS EVERY FILE IN EXISTENCE AT THE TIME OF COMMIT
+...
 ... DONE
 
 WRITE FILE CONTENTS TO DATA JS FILES
+EXCEPT FOR NON-TEXT FILES
+(THE `file --list` COMMAND SHOWS SOURCE CODE FILES ARE REPORTED WITH
+'text' IN THE OUTPUT WHEN RUNNING `file filename` SO WE DETERMINE
+IF IT IS A TEXT FILE BY SEARCHING FOR 'text' IN THE OUTPUT OF THE file
+COMMAND)
 WITH THE FOLLOWING STRING REPLACEMENTS
 0. btrepl VARIABLE IS A UNIQUE ID UNLIKELY TO BE FOUND IN SOURCE CODE
 a. vtrepl VARIABLE IS A UNIQUE ID UNLIKELY TO BE FOUND IN SOURCE CODE
@@ -31,9 +106,22 @@ b. TCS.replaceAll(${vtrepl}, '')
 ... DONE
 
 WRITE INFO FOR REPOS LIST
+FOR fullp IN .gitwebby/repo-paths.txt
+...EXTRACT name FROM fullp
+...EXTRACT readme FROM ls
+...EXTRACT descr FROM INITIAL readme LINES
+...EXTRACT authors FROM (git log --pretty=format:%an)
+...EXTRACT mod_date FROM (git log --date=iso-strict)
+...STORE ALL COMMIT FIELDS IN TAB-DELIMITED .gitwebby/repos.txt
+...
 ... DONE
 
 WRITE JS FOR REPOS LIST
+b IS BRANCH NAME, normname IS NORMALIZED REPO NAME
+FOR reporec in .gitwebby/repos.txt
+...PLACE TABBED DATA INTO 'COMMITS' JS VAR
+OUTPUTS: data/normname.b.commits.js data/repos.js data/branches.js
+...
 ... DONE
 
 PROCESS DIFFS BY PARSING COMMIT DIFFS AND
