@@ -1,0 +1,35 @@
+CT/49      V0.2      NODE-COMMAND              SETX/Y/W/H INCX/Y/W/H     FTR
+
+as a tab in the single node editor
+ _______________________________
+|  _________________            |
+| |> setx 100 ______|           |
+|                               |
+|  ( Edit )  ( *Cmd* )          |
+|_______________________________|
+
+
+setx 100  # set all x to be 100
+incx 100  # increment all x be 100
+setw 120  # set all width to be 120
+incw 120  # increment all selected width to be 120
+
+Update: to keep things a consistent UI, use multiline and allow multiple command
+entries. Since multiline is enabled, it might as well autofill the relevant
+commands with their current values, e.g.:
+    setx 103
+    incx 0
+
+Update 2: incx, incy should get updated values as you drag nodes, so the user
+can see to place it back where it started
+
+Update 3: can be ; delimited. setx 3; sety 4
+Update 4: broke out parse and node attr logic so they can be unit tested
+independently from what else is going on globally/DOM
+    Impl. JS/node-cmd.js
+        * window.cmParser (command parser class)
+        * window.cmNd (command node function)
+    Unit Test TEST/node_command_unit_tdd.js
+        * test 59+
+    (Non-unit) Integration Test TEST/node_command_tdd.js
+        * test 56

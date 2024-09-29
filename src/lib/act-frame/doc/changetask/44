@@ -1,0 +1,86 @@
+CHANGETASK 44 --
+RIGHT-CLICKING IN MIDDLE OF RECT BEING DRAW RESULTS IN A NEW RECT DRAWN
+AND ULTIMATELY RESULTS IN AN EXTRA NEGATIVE WIDTH RECTANGLE THAT WILL
+PREVENT SELECTING THE ORIGINAL RECTANGLE
+type    =    bug
+
+  _____     _______________
+       )   | Back          |
+ (_____    | Forward       |
+       ^   | Reload        |
+        \  | .rght-clckmenu|
+        /  |_______________|
+        \   
+         cursor in mid-draw
+         and right-click interrupts
+
+
+Results in a new rect drawn:
+  _____
+    .  )
+ (_____  _ 
+        (_)
+
+. => left-click position to close menu
+
+And then when closing the menu by left clicking to the left of the menu
+(e.g. click in the center of the 1st rectangle),
+and the 2nd rect goes invisible and causes errors due to having a negative width:
+    <rect rx="10" ry="10" x="228" y="191" width="-14" height="0" stroke="black" fill="transparent" stroke-width="1" id="rect2"/>
+
+  _____
+       )
+ (_____  
+        => second rect is here but now invisible
+
+
+Console error in Log:
+    
+    index.js:522 Error: <rect> attribute width: A negative value is not valid. ("-112")
+    window.updateFrames	@	index.js:522
+    window.manageDrawUpdate	@	node-manage.js:321
+    window.mousemove	@	index.js:952
+    
+Line 522 reference:
+    In [../../index.js]
+        In window.updateFrames
+            svg.innerHTML = xml;        // causes error message
+
+
+Now new issues will show up, one being that this rect can no longer be selected with click-drag
+selection rectangle:
+
+............
+.  _____   .
+.       )  .
+. (_____   .
+...........^   mode 0, click drag to select
+
+results in no selection on mouse up:
+
+  _____
+       )
+ (_____  
+
+
+
+Fix:
+
+In [../../index.js]
+    In window.mousedown
+        e = e || window.event;
+        + if (e.button > 0) return; // only handle mouse down for left-click events (0 button)
+
+
+Assured by tests:
+
+Test that right-clicking and then left-clicking off doesn't add a second rect and that no rect
+is there having -width nor -height:
+    [test/node_management_tdd.js] #54
+
+Test same workflow as above mentioned test, except add on an extra step ensuring that the original
+rect can be selected:
+    [test/node_management_tdd.js] #55
+
+
+

@@ -1,0 +1,23 @@
+CHANGETASK 40 --
+PASTING XML TEXT BEFORE ONSTART SHOULD NOT ATTEMPT NODE PASTE
+type    =    bug
+
+Before Start is clicked, the text editing mode editing should
+not result in a node paste (it should just be a normal textarea paste)
+
+Error:
+
+[js/node-manage.js]
+    window.issuePaste
+        window.gDispatch
+            document.getElementById("svgId").innerHTML=''; // causes console
+            // error:
+Uncaught TypeError: Cannot set properties of null (setting 'innerHTML')
+
+Fix:
+
+[js/node-manage.js]
+    In window.addEventListener("paste"
+        - window.issuePaste();
+        + if (window.gStarted) {
+            + window.issuePaste();

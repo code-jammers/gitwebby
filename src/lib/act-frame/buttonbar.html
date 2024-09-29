@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+    padding: 0;
+    margin: 0;background-color:black;
+}
+svg {
+    color:black;background-color:rgb(240,245,245);width:66px;height:66px;
+}
+svg:hover {
+    color:white;background-color:gray;font-weight:bold;cursor:pointer;
+}
+svg.active {
+    color:black;background-color:#EEFFEE;font-weight:bold;
+}
+svg {
+    padding:0;
+    margin: 0;
+    border-radius:5px;
+}
+table,tbody,tr,td{
+    margin: 0;
+    padding: 0;
+}
+td {
+    padding-left:24px;
+}
+td {
+    padding-top:7px;
+}
+td.title {
+    vertical-align:bottom;
+    padding-left: 60px;
+}
+td.title:hover {
+    cursor: pointer;
+}
+</style>
+<script>
+window.num = function(num) {
+    window.parent.postMessage('num:'+num, '*');
+    window.parent.focus();
+}
+
+/*window.addEventListener("DOMContentLoaded", function(e) {
+    document.onkeydown = (e) => {
+        e = e || window.event;
+        if ("1234567890".indexOf(e.key) > -1) {
+            window.parent.postMessage('key:'+e.key, '*');
+            window.parent.focus();
+            e.view.event.preventDefault();
+        }
+    };
+});*/
+window.onmessage = function(e) {
+    var msgComponents = e.data.split(':');
+    if (msgComponents.length >= 2 && msgComponents[0]=='num') {
+        //var els = document.getElementsByTagName('svg');
+        let tr = document.getElementsByTagName('tr')[0];
+        let num = parseInt(msgComponents[1]);
+        let idx = (num==0) ? 9 : num - 1;
+
+        (tr.querySelector("svg.active"))
+            /*<svg>*/
+            .classList.remove('active');
+
+        (tr.children[idx].querySelector("svg"))
+            /*<svg>*/
+            .classList.add('active');
+
+        /*[...tr.children].forEach((td,i)=> {
+            let svg = td.children[0];
+            if (i ==idx) svg.classList.add('active');
+            else svg.classList.remove('active');
+        });*/
+
+        /*for (var i=0; i<els.length; i++) {
+            var el = els[i];
+            if (el.innerHTML.indexOf(msgComponents[1]) > -1) {
+                el.classList.add('active');
+            }
+            else {
+                el.classList.remove('active');
+            }
+        }*/
+    }
+}
+</script>
+</head>
+<body onclick="window.parent.focus()">
+<!--target will be _parent, also add stylesheet-->
+<table><tbody><tr><td onclick="num(1)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+>
+    <text x="52" y="55" fill="#28282B">1</text>
+    <line x1="20" y1="30" x2="50" y2="30" stroke="black" stroke-width="1"/>
+</svg></td><td onclick="num(2)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+>
+    <text x="52" y="55" fill="#28282B">2</text>
+    <polyline points="18 31 55 31 45 21 55 31 45 41" stroke="black" fill="transparent" stroke-width="1"/>
+</svg>
+</td>
+<td onclick="num(3)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+>
+    <text x="52" y="55" fill="#28282B">3</text>
+    <rect rx="0" ry="0" x="13" y="15" width="45" height="20" stroke="black" fill="transparent" stroke-width="1"/>
+</svg></td>
+<td onclick="num(4)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+>
+    <text x="52" y="55" fill="#28282B">4</text>
+    <rect rx="10" ry="10" x="13" y="14" width="45" height="22" stroke="black" fill="transparent" stroke-width="1"/>
+</svg></td>
+<td onclick="num(5)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+>
+    <text x="52" y="55" fill="#28282B">5</text>
+    <polyline points="27 25 34 18 41 25 34 32 27 25" stroke="black" fill="transparent" stroke-width="1"/>
+</svg></td>
+<td onclick="num(6)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+>
+    <text x="52" y="55" fill="#28282B">6</text>
+    <circle cx="35" cy="24" r="10" fill="black" stroke="black" stroke-width="1"/>
+</svg></td>
+<td onclick="num(7)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+>
+    <text x="52" y="55" fill="#28282B">7</text>
+    <circle cx="35" cy="23" r="6" fill="black" stroke="black" stroke-width="1"/>
+    <circle cx="35" cy="23" r="10" fill="transparent" stroke="black" stroke-width="1"/>
+</svg></td>
+<td onclick="num(8)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+>
+    <text x="52" y="55" fill="#28282B">8</text>
+    <line x1="31" y1="41" x2="44" y2="41" stroke="#28282B" stroke-width="1"/>
+    <line x1="31" y1="21" x2="44" y2="21" stroke="#28282B" stroke-width="1"/>
+    <line x1="17" y1="31" x2="26" y2="31" stroke="#28282B" stroke-width="1"/>
+    <line x1="28" y1="14" x2="28" y2="48" stroke="black" stroke-width="3"/>
+</svg></td>
+<td onclick="num(9)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+>
+    <text x="52" y="55" fill="#28282B">9</text>
+    <text x="20" y="30" fill="#28282B">Text</text>
+</svg></td>
+<td onclick="num(0)">
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="66"
+    height="66"
+    viewBox="0,0,66,66"
+    class="active"
+>
+    <text x="52" y="55" fill="#28282B">0</text>
+    <text x="15" y="30" fill="#28282B">Select</text>
+</svg></td>
+<td class="title" onclick="window.top.location.href='index.html'"><a style="font-size:60px;position:relative;top:7px !important;color:white;">^</a><a style="text-decoration:underline;position:relative;left:-14px;top:-15px;color:white;">__ct.svg</a></td>
+</tr></tbody></table>
+</body>
+</html>

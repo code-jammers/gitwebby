@@ -1,0 +1,53 @@
+CHANGELOG 2022-11-24 -- V0.1 -- NODE MANAGEMENT
+
+gh-10 :: rectangular selection
+gh-16 :: click-drag rectangular selection
+gh-15 :: won't implement dropdown (with 16,10 you can select anything)
+gh-3 :: won't implement click to place selection(conflicts w/ click to deselect)
+
+CHANGELOG 2022-11-25 -- V0.1 -- NODE MANAGEMENT
+
+gh-2 :: allow nodes to overlap
+
+CHANGELOG 2022-11-26 -- V0.1 -- NODE MANAGEMENT
+
+gh-6 :: copy between app instances
+gh-7 :: copy paste selection
+
+CHANGELOG 2022-11-27 -- V0.1 -- NODE MANAGEMENT
+
+gh-8 :: delete a node feature via Cut (Ctrl-x)
+
+CHANGELOG 2022-11-29 -- V0.1 -- NODE MANAGEMENT
+
+gh-18 :: click-drag to draw rectangle, line, polyline
+
+CHANGELOG 2023-01-05 -- V0.1 -- NODE MANAGEMENT
+
+gh-33 :: clicking outside drawing bounds should not add elements to the xml
+
+CHANGELOG 2023-01-15 -- V0.1 -- NODE MANAGEMENT
+
+gh-1 :: fixed inner rectangle not being selected bug
+
+CHANGELOG 2023-01-16 -- V0.1 -- NODE MANAGEMENT
+
+gh-1 :: add permutation test for selecting elements inside rect
+
+CHANGELOG 2023-02-11 -- V0.1 -- NODE MANAGEMENT
+
+ct/37 :: drag from outside selected rect should cancel rect selection
+
+CHANGELOG 2023-02-12 -- V0.1 -- NODE MANAGEMENT
+
+ct/39 :: selection rectangle to work around two almost aligned rects
+
+CHANGELOG 2023-02-18 -- V0.1 -- NODE MANAGEMENT
+
+ct/40 :: paste xml text before onstart does not paste as nodes
+ct/41 :: click to place text opens text in editor not neighboring polyline
+ct/42 :: paste text into element editor doest not paste as nodes
+
+CHANGELOG 2023-02-19 -- V0.1 -- NODE MANAGEMENT
+
+ct/44 :: right-click interrupt does not prevent normal rect draw and select

@@ -1,0 +1,1 @@
+window.gLibSaxophoneParser = (require('saxophone'));

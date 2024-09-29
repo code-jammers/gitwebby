@@ -1,0 +1,36 @@
+CHANGELOG 2023-04-02 -- V0.2 -- NODE DRAWING
+
+ct/50 :: rect resizing
+
+CHANGELOG 2023-04-08 -- V0.2 -- NODE DRAWING
+
+ct/50 :: rect resizing with tests
+
+CHANGELOG 2023-04-09 -- V0.2 -- NODE DRAWING
+
+ct/50 :: line/arrow (failing) resize tests
+
+CHANGELOG 2023-05-20 -- V0.2 -- NODE DRAWING
+
+ct/50 :: bug fix (with test) to enable resize on non-id rects
+ct/50 :: bug fix (with test) prevents resize during an element move-drag action
+
+CHANGELOG 2023-05-21 -- V0.2 -- NODE DRAWING
+
+ct/50 :: fixed a move test that was failing because it was dragging to move from
+         a line vertex point (now a line vertex drag should resize the shape)
+ct/50 :: implement line resize (test passes)
+ct/46 :: started implementing toggled () code block invocations, to assure a
+         particular code fix/feature really maps 1:1 code<-->test
+
+CHANGELOG 2023-05-27 -- V0.2 -- NODE DRAWING
+
+ct/50 :: implement arrow connector resize (test passes)
+
+CHANGELOG 2023-05-28 -- V0.2 -- NODE DRAWING
+
+ct/50 :: implement circle resize (test passes)
+
+CHANGELOG 2023-06-03 -- V0.2 -- NODE DRAWING
+
+ct/51 :: line/arrow self-snap point2 to point1 x/y (with tests)

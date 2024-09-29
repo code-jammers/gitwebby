@@ -1,0 +1,17 @@
+CHANGELOG 2023-01-07 -- V0.1 -- NODE MOVEMENT
+
+gh-19 :: change arrow-keys move selection behavior
+gh-17 :: click-drag to move nodes
+
+CHANGELOG 2023-01-08 -- V0.1 -- NODE MOVEMENT
+
+gh-19 :: fix losing select color on keypresses when single-click selected
+
+CHANGELOG 2023-01-28 -- V0.1 -- NODE MOVEMENT
+
+ct/34 :: move subselection uniformly
+
+CHANGELOG 2023-02-05 -- V0.1 -- NODE MOVEMENT
+
+ct/35 :: move inner selected rect
+

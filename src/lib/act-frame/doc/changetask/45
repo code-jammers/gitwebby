@@ -1,0 +1,23 @@
+CHANGETASK 45 --
+DECISION NODES EXTENDED IN SIZE TO HOLD TEXT
+type    =    extension
+
+In the bottom URL bar, add a Decision link with a variety of sizes; currently
+there will be no way for the user to resize the ones given by the extension.
+
+
+The usual way of doing decision nodes:
+
+               | 
+               v  
+ reg. user___ / \___ super user
+          |   \ /   |
+          v         v
+
+Now there could be text within the Decision node:
+
+               |
+         ______v_________
+no  ___ / is super user? \___ yes
+    |   \________________/   |
+    v                        v

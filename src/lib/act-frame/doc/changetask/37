@@ -1,0 +1,50 @@
+CHANGETASK 37 --
+DRAG FROM OUTSIDE SELECTED RECT  SHOULD CANCEL RECT SELECTION
+type    =    bug
+
+
+1. Start new selection to select inner text elements outside the selected rect:
+     *******   ....
+    * text1 *  .  . 
+    * text2 *  ^...
+    *       *  |
+     *******   new selection cursor
+
+2. drag to surround the inner text elements results in moving
+   the selected rect (bug):
+
+             ......
+      text1  .    . 
+      text2  .    .
+             .    .
+     ||||||| ^.....
+    |       |
+    |       | 
+    |       |
+     |||||||
+
+
+After the bug is fixed, #2 should instead keep the rect in-place and the inner
+text will actually not be selected since the drag is cancelling a current
+selection, and the rect is now de-selected.
+
+  ...|||||||.......
+  . | text1 |     . 
+  . | text2 |     .
+  ^.|.......|......  
+     |||||||
+
+Test that assures the fix
+* test #48 [test/node_management_tdd.js]
+
+Fix:
+
+window.mvShouldCancel = function(x,y) {
+    return Math.abs(window.gRectSelectState.firstX-x)>18 ||
+        Math.abs(window.gRectSelectState.firstY-y)>18;
+}
+In window.mvIsMove:
+    In NotMoving-CanMove Condition
+        if (window.mvShouldCancel(x,y)) {
+            return false;
+        }

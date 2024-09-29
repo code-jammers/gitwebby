@@ -1,0 +1,28 @@
+ACTIVITY DIAGRAM SVG EDITING TOOL
+
+Testing in the browser:
+    Run all [tdd] tests:
+        /index.html?tdd=0
+    Run [tdd] test # (e.g. 12) and [f]reeze
+        /index.html?tddf=12
+    Find next test # for a new unit test*:
+        1. Run a later test #, e.g. 40:
+            /index.html?tdd=40
+        2. The # it ends on in the URL param is the next unit test, e.g. ?tdd=48
+
+Testing in cli:
+    Run all tests (unordered)
+        npm test
+    Find next unit test #
+        1. Run all tests with human readable sort
+            npm test 2>&1 | sed 's/test//' | sort -h
+        2. Take last number and +1 will be your next unit test*
+            # e.g. last output line
+            47 - pass
+            # 48 will be next test #
+
+BUILD
+    npm run build
+
+BUILD REVERT
+    npm run clean # reset back for git

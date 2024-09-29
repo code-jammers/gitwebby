@@ -12,3 +12,8 @@ data/
 COMMIT.txt
 *~
 npm-debug.log*
+!src/lib/act-frame/index.js
+!src/lib/act-frame/js/*
+!src/lib/act-frame/test/*
+!src/lib/act-frame/lib/*
+!src/lib/act-frame/lib/dist/*

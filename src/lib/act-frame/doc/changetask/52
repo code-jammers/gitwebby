@@ -1,0 +1,20 @@
+CT/52      V0.2      XML-EDITING               MACRO-LEVEL XML EDITOR    FTR
+Before clicking 'Start', there is a chance to edit the full raw XML and deal
+with it on a text-based basis (e.g. paste in to integrate elements from multiple
+svg docs, etc). A lot of editing can then happen at the micro level by selecting
+a particular element and a smaller text editor appears just for that 1 element,
+while the fuller text editor is read-only. In order to edit the full xml text
+you have to copy it and then refresh the page to paste in and use the full
+editor again.
+
+There are a lot of reasons why someone might want to edit the full xml text
+in the middle of an editing session, here's a few:
+    1) make sure a new element has a certain ordering (before/after certain
+       other nodes)
+    2) when the attributes are trivial in text mode, ie: place node at (0,0),
+       then editing the text is easier than trying to get corret x,y with mouse
+    3) Give a fill to all elements, ie: search and replace all instances of
+       fill="transparent" with fill="#FFF"
+    4) uniformity of elements, e.g. quickly scan and find all elements with
+       x approx equal to 100 and edit one after the other until all have x
+       equal to 100.

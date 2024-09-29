@@ -1,0 +1,36 @@
+{
+  "name": "act.svg",
+  "version": "0.1.0",
+  "description": "Activity Diagram SVG Editing Tool",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "test/test",
+    "build": "(npm install browserify && npm install saxophone && node_modules/browserify/bin/cmd.js lib/saxophone.js -o lib/dist/saxophone.js) && (npm install fast-xml-parser && node_modules/browserify/bin/cmd.js lib/fast-xml-parser.js -o lib/dist/fast-xml-parser.js)",
+    "clean": "echo -n > lib/dist/saxophone.js; echo -n > lib/dist/fast-xml-parser.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koreyhinton/act.svg.git"
+  },
+  "keywords": [
+    "activity",
+    "diagram",
+    "svg"
+  ],
+  "author": "Korey Hinton",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/koreyhinton/act.svg/issues"
+  },
+  "homepage": "https://github.com/koreyhinton/act.svg#readme",
+  "dependencies": {
+    "browserify": "^17.0.0",
+    "fast-xml-parser": "^4.2.2",
+    "jsdom": "^20.0.2",
+    "saxophone": "^0.8.0"
+  }
+}

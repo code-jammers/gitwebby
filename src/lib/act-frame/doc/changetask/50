@@ -1,0 +1,22 @@
+CT/50      V0.2      NODE-DRAWING              ABLE TO RESIZE EACH NODE  FTR
+same as ct/48 except for all the other types that already have resize behavior
+on the initial draw action.
+
+By clicking on an end part of a node and start dragging in select mode it will
+start resizing.
+
+   \
+    \
+    \/
+       \__  e.g. click arrow point
+            and drag starts resizing it in mode=0
+
+Update:
+It will activate re-size behavior even if the node is not already selected.
+
+Hovering corners will display the resize icon according to the vertex being
+hovered (e.g., img/00.svg x=0,y=0).
+
+Future changetask:
+    Also, should be able to resize multiple at once (e.g., select 3 rects in a
+    line and resize all 3 to be a larger width).

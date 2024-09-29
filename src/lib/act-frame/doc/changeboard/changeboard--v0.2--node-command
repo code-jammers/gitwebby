@@ -1,0 +1,16 @@
+#+STARTUP: showeverything
+* CHANGEBOARD -- v0.2 -- NODE-COMMAND -- KANBAN
+
+M-x wik-mode
+M-S-DOWN (wik-open-file-at-point)
+
+M-x org-mode (org-mode)
+S-RIGHT (org-table-move-cell-right)
+
+|---------------------+---------------------+---------------------|
+| Todo                | In-Progress         | Done                |
+| (change identified) | (tests are failing) | (tests are passing) |
+|---------------------+---------------------+---------------------|
+|                     |                     | ct/49               |
+|---------------------+---------------------+---------------------|
+

@@ -1,0 +1,38 @@
+CHANGETASK 41 --
+CLICK TO PLACE TEXT SHOULD OPEN TEXT WINDOW NOT POLYLINE
+
+
+
+/ \
+\ /
+ |
+ |
+ | ?  ---last action: mode 9 click to add '?' text close by the arrow (polyline)
+ v
+
+What's supposed to happen is the text editor brings up the edit screen for the 
+text element (so you can place your own text in place of the '?', however
+instead it gets the polyline:
+    <polyline points="107 113 107 150 97 140 107 150 117 140" stroke="black" fill="transparent" stroke-width="1" id="polyline1"/>
+
+After fix it should have brought up this text in the textarea instead:
+    <text x="117" y="134" fill="#CAFFB5" id="text1">?</text>
+
+Assured by test:
+    [test/tdd.js] #51
+
+Fix:
+
+Instead of clicking at the point of the left-most edge of a newly created text
+element, instead click at the original click point.
+
+In [../../index.js]
+    In window.issueClick
+        In if (numMode == 9) {
+            - issueClick(adjX, adjY);    updateFrames();
+            + /*step1*/issueClick(x, y);
+            + /*step2*/updateFrames();
+
+Assured by:
+    [test/node_management_tdd.js] #52
+

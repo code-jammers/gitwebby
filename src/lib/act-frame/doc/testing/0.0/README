@@ -1,0 +1,77 @@
+PATCH FIXES 0.0 VERSION
+
+# create local folder for 0.0 repo
+git clone git@github.com:koreyhinton/act.svg.git act.svg0.0
+cd act.svg0.0
+
+# create 0.0 branch
+git checkout v0.0.0      # original 0.0.0 version tag
+git switch -c mainb/v0.0
+
+# bring down latest test code in another branch
+git fetch origin mainb/v0.2b/node-drawing
+git checkout mainb/v0.2b/node-drawing
+git pull origin mainb/v0.2b/node-drawing
+
+# bring in latest test code into 0.0 branch
+git checkout mainb/v0.0
+git checkout mainb/v0.2b/node-drawing -- test/
+git checkout mainb/v0.2b/node-drawing -- package.json
+
+# install jsdom test dependency
+npm install
+
+# satisfy missing code part 1, run this once and whenever js/index.js is updated
+cp js/index.js index.js
+globalrefs=$({
+    echo onStart
+    echo issueClick
+    echo updateFrames
+    echo onApplyEdits
+    echo issueKeyNum
+    echo mousedown
+    echo keydown
+    echo forceMap
+    echo smartMap
+    echo issueKeyName
+} | cat)
+for r in `echo "$globalrefs"`
+do
+    sed -iindex.bak "s/function ${r}/window.${r} = function/" index.js
+done
+
+# satisfy missing code part 2, run this just once
+touch js/node-snap.js
+touch js/svg-mouse.js
+sed -icirun.bak 's/gRect/gRect=null;\/\//' test/tdd_cirun.js
+sed -icirun.bak 's/ res/ res=false;try{res/' test/tdd_cirun.js
+sed -icirun.bak 's/]();/]();}catch(e){console.warn(e);}/' test/tdd_cirun.js
+sed -icirun.bak 's/dow;/dow;window.gSvgFrame={getStart:()=>{ return {x: 750, y: 88}}};/' test/tdd_cirun.js
+sed -icirun.bak 's/dow;/dow;window.mousemove=()=>{};/' test/tdd_cirun.js
+sed -icirun.bak 's/dow;/dow;window.mouseup=()=>{};/' test/tdd_cirun.js
+sed -icirun.bak 's/ter;/ter;issueDrag=function(x1,y1,x2,y2){issueClick(x1,y1);updateFrames();issueClick(x2,y2);updateFrames();}/' test/tdd_cirun.js
+sed -icirun.bak 's/dow;/dow;window.lgLogNode=()=>{};/' test/tdd_cirun.js
+sed -iindex.bak 's/tdd.js/tdd.js"><\/script><script src="test\/tdd_webrun.js/' index.html
+sed -icirun.bak 's/ter;/ter;window.mvIssueMoveKey=global.issueKeyName;/' test/tdd_cirun.js
+
+# ignore any test code that can just be directly copied from a later branch ver.
+echo >>.gitignore
+echo '# ignore test code overlayed on top of the 0.0 branch' >>.gitignore
+echo "test/" >>.gitignore  # test/tdd.js and test/tdd_move.js are already in 0.0
+#                            and so ignore rules won't apply (will check-in any
+#                            new updates)
+echo "package.json" >>.gitignore
+echo "package-lock.json" >>.gitignore
+echo "js/node-snap.js" >>.gitignore
+echo index.js >>.gitignore
+echo "js/svg-mouse.js" >>.gitignore
+echo '*.bak*' >>.gitignore
+echo 'node_modules/' >>.gitignore
+
+# run the tests #  npm test
+# (first add 76 to test/test array)
+
+res1=$(npm test 2>&1 | egrep 'test[0-9] -' | uniq)
+res2=$(npm test 2>&1 | egrep 'test1[0-8] -' | uniq)
+res3=$(npm test 2>&1 | egrep 'test76 -' | uniq)
+echo "$res1"$'\n'"$res2"$'\n'"--1 Pass 1 Fail:--"$'\n'"$res3"

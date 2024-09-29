@@ -1,0 +1,4 @@
+CHANGELOG 2022-11-17 -- V0.1 -- CI TESTING
+
+gh-9 :: implement 'enable command line / node testing running, e.g., via jsdom'
+gh-9 :: implement 'ci workflow'

@@ -1,0 +1,38 @@
+CHANGETASK 38 --
+NEED TO MAKE TEXT BOUNDS DETECTION MORE EXACT
+type    =    bug
+
+Before fix: bounding rect used for detecting text bounds does not fit around
+            text letters (e.g. 'b') nicely.
+
+--|---
+- |) -
+-    -
+------
+
+(Also, long text results in excessive trailing whitespace in its bounds: 
+    | ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz    |
+)
+
+After Fix: b does not overextend top of rect and has no extra bottom space.
+
+
+------
+- |  -
+- |) -
+------
+
+(Now, long text results in non-excessive trailing whitespace in its bounds: 
+    | ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  |
+)
+
+
+Fix:
+Test draws rectangles around a few text elements and test that
+the rect is exactly bounding the text element
+* test #49 [test/tdd.js]
+
+
+
+
+
