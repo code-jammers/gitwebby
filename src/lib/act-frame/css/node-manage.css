@@ -1,0 +1,7 @@
+/* SEL MARKER */
+#selMarker {
+    position: absolute;
+    visibility: hidden;
+    border: 4px dotted #4169E1; /*Royal Blue*/
+}
+

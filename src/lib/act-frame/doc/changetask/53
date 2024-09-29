@@ -1,0 +1,3 @@
+CT/53      V0.2      XML-EDITING               VALIDATE XML EDITOR       FTR
+require xml validation for free-text edits before updates and saving it
+signal in some way that it didn't save

@@ -1,0 +1,61 @@
+CHANGETASK 35 --
+DRAGGING ON A SELECTED EMPTY RECT INSIDE ANOTHER RECT SHOULD MOVE THE RECT
+type    =    bug
+
+1. click on inner rect and now it is selected (*):
+ ___________
+|           |
+|           |
+|           |
+|  ******   |
+|  *    *   |
+|  *    *   |
+|  ******   |
+|           |
+|           |
+|           |
+|           |
+|___________|
+
+2. drag somewhere inside inner-rect to try and move and now it starts a new
+   selection rectangle and after mouseup and it shows at the same spot unmoved
+   (and as expected no longer selected):
+ ___________
+|           |
+|           |
+|           |
+|  ||||||   |
+|  |    |   |
+|  |    |   |
+|  ||||||   |
+|           |
+|           |
+|           |
+|           |
+|___________|
+
+
+After bug fix #2 it should instead be moved in whatever direction,
+e.g.y direction move (and selection cancels after move is completed by mouseup):
+
+ ___________
+|           |
+|           |
+|           |
+|           |
+|           |
+|           |
+|    |||||| |
+|    |    | |
+|    |    | |
+|    |||||| |
+|           |
+|___________|
+
+
+Test that assures the fix
+* test #47 [test/node_movement_tdd.js]
+
+Fix [js/node-move.js] in mvIsMove function
+- var clickedNd = xy2nd(x,y);
++ var clickedNd = xy2nd(x,y,/*withNearestEdge=*/true);

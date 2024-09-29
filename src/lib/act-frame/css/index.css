@@ -1,0 +1,219 @@
+/* GENERIC ELEMENTS */
+
+body {
+    font-family: "Courier New";
+    background-color: rgb(8,8,8);
+}
+
+textarea {
+    border: 0;
+    resize: none;
+    background-color: transparent;
+    font-family: "Courier New";
+    font-size: 22px;
+}
+
+#svgPartTextarea {
+    color: rgb(80,80,80);
+}
+
+#svgFullTextarea {
+    color: white;/*rgb(80,80,80);*/
+}
+
+textarea:focus {
+   outline-color: #FFA500;
+}
+
+svg {
+    pointer-events: none;
+}
+
+/* RIGHT-PANE DISPLAY ELEMENTS */
+
+#pageDisplayFrame {
+    position:absolute;
+    width:748px;
+    height:750px;
+    left:750px;
+    top:88px;
+    border:1px solid black;
+    box-shadow: 1px 2px 3px black;
+    background-color: white;
+}
+
+
+/* LEFT-PANE EDITING ELEMENTS */
+
+#pageCodeFrame {
+    position:absolute;
+    top:88px;
+    left:0px;
+    width:750px;
+    height:750px;
+    border:1px solid black;
+    background-color: rgb(1,1,1);/*see xml-edit.js, toggles black and red*/  /*rgb(255,255,240);*/
+}
+
+/*.disabled {
+    background-color: lightgrey !important;
+}*/
+
+#svgFullTextarea {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    width:743px;
+    height:744px;
+}
+
+#editModalBG {
+    /*position: absolute;
+    left: 0px;
+    top: 0px;*/
+    position: relative;
+    left: 0px;
+    top: -750px;
+    width: 750px;
+    height: 750px;
+    visibility: hidden;
+    background-color: black;
+    z-index: 10000;
+}
+
+#editModal {
+    position: relative;
+    top: 160px;/*-650px;*/
+    left: 100px;
+    width: 500px;
+    height: 250px;
+    background-color: rgb(255,255,240);
+}
+
+textarea.inptrue {}
+textarea.inpfalse {
+    visibility: hidden !important;
+    height: 0px !important;
+}
+button.subm.inpfalse {
+    visibility: hidden !important;
+    height: 0px !important;
+}
+.tabtrue {
+    background-color: rgb(255,255,240) !important;
+}
+.tabfalse {
+    background-color: white !important;
+}
+.tabfalse, .tabtrue {
+    margin-top:0;
+    border: 0;
+    padding-top:6px;
+    font-size: 20px;
+    position: relative;
+    top: -30px;
+    margin-right: 0px;
+    margin-left: 0px;
+    height: 30px;
+}
+
+#svgPartTextarea {
+    width: 500px;
+    height: 250px;
+}
+
+#commandTextarea {
+    width:480px;
+    height:200px; /*height:35px;*/
+    background-color: rgb(255,255,240);
+    position: relative;
+    top: -45px;
+    padding-top: 30px;
+}
+
+#run {
+    margin-top:0;
+    border: 0;
+    padding-top:6px;
+    font-size: 20px;
+    color: black;/*white;*/
+    background-color: rgb(100,150,100);/*green;*/
+}
+
+#btnModal {
+    margin-top:0;
+    border: 0;
+    padding-top:6px;
+    font-size: 20px;
+    color: black;/*white;*/
+    background-color: rgb(100,150,100);/*green;*/
+    position:relative;
+    left: -49px;
+    top: -41px;
+}
+
+/* TOP-PANE TOOLBAR ELEMENTS  */
+
+#pageToolbar {
+    position:absolute;
+    top:0px;
+    left:0px;
+    width: 1500px;
+    height:88px;
+    background-color: white; /*it actually appears black, see buttonbar.html*/
+    /*background-color: rgba(0,0,0,0.88);*/
+}
+
+#buttonStart {
+    border: 0;
+    padding-top:6px;
+    background-color: rgba(255,255,255,0.08);
+    color: black;
+}
+
+#tools1  {
+    margin-left: 400px;
+    margin-top: 18px;
+    color: green;
+}
+
+.tool {
+    font-size: 40px;
+    color: white;
+    font-family: "Courier New";
+}
+
+#tools2 {
+    position: absolute;
+    left: 0px;
+    top:0px;
+    font-size: 80px;
+}
+
+.active {
+    background-color: rgba(255,255,255,0.08);
+}
+
+/* FOOTER ELEMENTS  */
+#footer { 
+    position:fixed;
+    bottom:0px;
+    left:0px;
+    width: 1500px;
+    height:90px;/*130px;*/
+    line-height:8pt;
+    padding-top:10px;
+    padding-left:10px;
+    background-color: black;/*#CE3C05;*/ /*lightblue;*/
+    color: white;
+}
+/* MOVE MARKER */
+#moveMarker {
+    position: absolute;
+    visibility: hidden;
+}
+#moveMarker pre {
+    font-size: 32px;
+    font-weight: lighter;
+    color: #4169E1; /*Royal Blue*/
+}

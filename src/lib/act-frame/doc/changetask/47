@@ -1,0 +1,38 @@
+CT/47      V0.2      NODE-DRAWING              DRAG 2 RESHAPE DEC. ND    FTR
+Dragging the decision node right or left draws changes the drawn width.
+Dragging it up or down changes the drawn height.
+
+This allows drawing it large enough to hold text
+
+See plantuml activity diagram documentation. 'Graphviz installed?' diamond
+
+                   *
+               ___/
+              /     ____larger decision node created by dragging
+             \/    /
+        ____________
+ no __ / safe mode? \__ yes
+    |  \____________/  |
+    |                  |   __normal decision node created by click (no dragging)
+    |                  |  /
+    |__\ ..     .. /__ /\__\ ..
+       /           \   \/  /
+
+Update: originally I thought the click-drag flexible sizing feature would
+also handle drawing normal (4-line) decision nodes but larger in size.
+However, the drag logic would have to determine if its a 4-line or 6-line.
+
+Backlog: a configuration item of 'default decision node size' can be configured.
+This task: A single click creates a 4-line decision node whereas a click-drag
+(of noticeable sized movement) creates a flexible 6-line polyline.
+
+Click (4-line):
+    /\
+    \/
+
+Click-Drag (6-line):
+    __
+   /  \
+   \__/
+
+Update 2: this task will focus on the reshaping between 4-sided and 6-sided

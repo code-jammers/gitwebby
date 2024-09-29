@@ -1,0 +1,17 @@
+CHANGETASK 36 --
+BUILD UP A CALL LOG WITH PARAMETER VALUES FOR KEY AND MOUSE EVENTS
+TO EASILY CONVERT USER ACTIONS INTO A UNIT TEST 
+type    =    automate testing feature
+
+Implementation in [js/user-log.js]
+* lgUserCache function for mousemove repeated logging (only last gets saved)
+* lgUserCacheFlush function for mouseup (after mousemove repeated is finished)
+* lgUser function for normal/non-repititious logging
+* lgUserFlush function to be ran manually in console after a bug occurs
+
+Execute this function in the console to display the call log (it also resets the
+log)
+
+> window.lgUserFlush()
+  window.onStart({});
+  ..etc

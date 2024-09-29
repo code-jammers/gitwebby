@@ -1,0 +1,41 @@
+CHANGETASK 39 --
+SELECTION RECTANGLE AROUND TWO ALMOST ALIGNED RECTS, ONE LARGE, ONE SMALL NEEDS
+TO SELECT BOTH RECTS
+type    =    bug
+
+
+  -----------
+  -         -
+  -         -
+  -         -----------------------
+  -----------                     -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  -                               -
+  ---------------------------------
+
+  ^
+   \
+    selecting around these 2 rects does not actually select the rects
+
+
+Fix:
+
+Assured by test #50 [test/node_management_tdd.js]
+
+Implementation In [js/node-manage.js] window.issueRectSelectClick2
+    In selected list loop
+        svgNodes = [
+            selLst[i],
+            ...svgNodes.filter(nd => nd != selLst[i])
+        ];

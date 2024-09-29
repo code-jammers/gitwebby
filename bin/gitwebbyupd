@@ -423,8 +423,9 @@ echo b.\ TCS.replaceAll\(\$\{vtrepl\}, "'')"
             echo "$content" >"${dotdir}/f_${fhash}.txt"
             ftype=$(file "${dotdir}/f_${fhash}.txt"| cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
             ftype_text=$(echo "$ftype" | grep text | wc -l)
+            ftype_svg=$(echo "$ftype" | grep SVG | wc -l)
             overwrite=""
-            if [[ $ftype_text -eq 0 ]]; then
+            if [[ $ftype_text -eq 0 && $ftype_svg -eq 0 ]]; then
                 # overwrite contents with file type
                 overwrite="file content ommitted for file type: <${ftype}>"
                 echo "$overwrite" >"${dotdir}/f_${fhash}.txt"

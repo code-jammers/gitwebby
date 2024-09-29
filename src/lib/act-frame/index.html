@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Activity Svg</title>
+    <!--<script src="lib/dist/saxophone.js"></script>
+    <script src="lib/dist/fast-xml-parser.js"></script>-->
+    <script src="js/css-toggle.js"></script>
+    <script src="js/user-log.js"></script>
+    <script src="js/xml-edit.js"></script>
+    <script src="js/node-log.js"></script>
+    <script src="js/node-type.js"></script>
+    <script src="js/node-attr.js"></script>
+    <script src="js/node-vertex.js"></script>
+    <script src="js/node-cmd.js"></script>
+    <script src="js/node-draw.js"></script>
+    <script src="js/node-snap.js"></script>
+    <script src="js/node-manage.js"></script>
+    <script src="js/node-move.js"></script>
+    <script src="js/xml-buttons.js"></script>
+    <script src="/src/lib/act-frame/js/svg-mouse.js"></script>
+    <script src="/src/lib/act-frame/js/addon-palettes.js"></script>
+    <script src="/src/lib/act-frame/js/node-map.js"></script>
+    <script src="/src/lib/act-frame/index.js"></script>
+    <script src="test/tdd_move.js"></script>
+    <script src="test/tdd_cmd.js"></script>
+    <script src="test/tdd.js"></script>
+    <script src="test/xml_buttons_tdd.js"></script>
+    <script src="test/node_management_tdd.js"></script>
+    <script src="test/node_mappings_tdd.js"></script>
+    <script src="test/node_mappings_unit_tdd.js"></script>
+    <script src="test/node_snapping_tdd.js"></script>
+    <script src="test/node_movement_tdd.js"></script>
+    <script src="test/node_command_unit_tdd.js"></script>
+    <script src="test/node_command_tdd.js"></script>
+    <script src="test/node_drawing_tdd.js"></script>
+    <script src="test/node_drawing_unit_tdd.js"></script>
+    <script src="test/xml_editing_tdd.js"></script>
+    <script src="test/xml_editing_unit_tdd.js"></script>
+    <script src="test/tdd_webrun.js"></script>
+    <script src="js/page-url.js"></script>
+    <script src="js/templates.js"></script>
+<!-- PAGE STYLE -->
+    <link rel="stylesheet" href="css/node-manage.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/xml-buttons.css">
+</head>
+<body>
+<!-- PAGE CONTENT -->
+    <div id="pageContent">
+<!-- PAGE CONTENT - TOOLBAR -->
+        <div id="pageToolbar">
+            <div id="tools1" class="tool">&lt;<button class="tool" id="buttonStart" onclick="onStart()">START</button>/&gt;</div>
+            <div style="visibility:hidden" id="tools2" class="tool">
+                <iframe scrolling="no" src="buttonbar.html" width="1499px" height="86px" style="padding:0;margin:0;border: 1px solid rgb(170, 170, 170);">1 line, 2 arrow, 3 rect, 4 rounded rect, 5 decision node, 6 initial node, 7 final node, 8 fork/join, 9 text, 0 select</iframe>
+            </div>
+        </div>
+<!-- PAGE CONTENT - CODE FRAME -->
+        <div id="pageCodeFrame">
+            <textarea id="svgFullTextarea" onkeydown="window.gXmlEditor.backgroundUpdate()" onkeypress="window.gXmlEditor.backgroundUpdate()"></textarea><!-- onkeydown captures delete and arrow events -->
+            <div id="editModalBG">
+                <div id="editModal">
+                    <button class="tabtrue inptrue clickfalse" onclick="cssToggle(this)">Node XML</button>
+                    <button class="tabfalse inpfalse clicktrue" onclick="cssToggle(this)">Node Cmd</button>
+                    <textarea class="inptrue" id="svgPartTextarea" onchange="onApplyEdits()"></textarea>
+                    <textarea class="inpfalse" id="commandTextarea">setw 100</textarea>
+                    <button class="inpfalse subm" id="run" onclick="onRun()">Run</button><button class="inptrue subm" id="btnModal" onclick="onDone()">Done</button>
+                </div>
+            </div>
+<!-- PAGE CONTENT - CODE FRAME - XML BUTTON FRAME -->
+            <div id="xmlButtonFrame">
+                <button onclick="issueUpload()">Open activity diagram (svg)</button>
+                <button onclick="issueCopy()">Copy (xml)</button>
+                <button onclick="issueDownload()" value="Download act.svg">Download (svg)</button><input type="file" id="upload" style="visibility: hidden;"/>
+            </div>
+        </div>
+<!-- PAGE CONTENT - DISPLAY FRAME -->
+        <div id="pageDisplayFrame">
+        </div>
+<!-- PAGE CONTENT - FOOTER -->
+        <div id="footer">
+            <p><a style="background-color:black;color:rgb(255,255,240);padding:2px;" href="?page=home">Act.svg</a>
+            <!--<a href="?tdd=0">Run tdd tests</a>--></p>
+            <p>
+            <a style="color:rgb(150,100,100)">Ext-activity Palettes { </a>
+            <a style="cursor:pointer;" onclick="pal('swim3')">3-Swim,</a>
+            <a style="cursor:pointer;" onclick="pal('pins')">Pins,</a>
+            <a style="cursor:pointer;" onclick="pal('connectors')">Connectors</a>
+            <a style="color:rgb(150,100,100)"> } </a></p>
+            <p><a style="color:rgb(100,150,100)">Add-on UML Palettes { </a>
+            <a style="cursor:pointer;" onclick="pal('collab')">Collab,</a>
+            <a style="cursor:pointer;" onclick="pal('decision')">Decision</a>
+            <a style="color:rgb(100,150,100)"> } </a></p>
+        </div>
+<!-- PAGE CONTENT - MARKERS --><div id="selMarker"></div>
+        <div id="moveMarker"><pre>+</pre></div>
+    </div>
+</body>
+</html>

@@ -2,7 +2,7 @@
 import { html, LitElement, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { Repository } from '../types/Repository';
-
+import '../lib/act-frame/act-frame';
 import dayjs from 'dayjs/esm';
 import allStyles from '../styles/all-styles';
 import loadScript from '../services/script-loader';
@@ -420,7 +420,7 @@ export default class GitRepositoryElement extends LitElement {
           icon="${this.renderMarkdown ? 'code' : 'description'}"
         ></mwc-icon-button>
       </file-header>
-      ${!this.renderCodeMirror ? nothing : html`<git-codemirror .selectedFile=${this.selectedFile}></git-codemirror> `}
+      ${!this.renderCodeMirror ? nothing : this.selectedFile.name.endsWith('.svg') ? html`<act-frame .selectedFile=${this.selectedFile}></act-frame>` : html`<git-codemirror .selectedFile=${this.selectedFile}></git-codemirror> `}
       ${!this.renderMarkdown
         ? nothing
         : html`

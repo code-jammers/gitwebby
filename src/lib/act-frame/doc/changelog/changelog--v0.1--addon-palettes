@@ -1,0 +1,12 @@
+CHANGELOG 2022-12-17 -- V0.1 -- ADDON PALETTES
+
+gh-21 :: fix drawing and selection rectangle position when scrolled
+gh-24 :: addon-palettes
+
+CHANGELOG 2022-12-23 -- V0.1 -- ADDON PALETTES
+
+gh-24 :: addon-palettes - collapse other frams rather than scrolling
+
+CHANGELOG 2023-02-26 -- V0.1 -- ADDON PALETTES
+
+ct/45 :: extension to have larger decision nodes (that can hold text)

@@ -1,0 +1,33 @@
+CHANGETASK 42 --
+PASTING XML TEXT (E.G. HEX COLOR) IN NODE TEXT EDIT
+SHOULD NOT ATTEMPT TO PASTE NODES, JUST DO THE NORMAL TEXT IN EDITOR PASTE
+type    =    bug
+
+Bring up the editor for a particular node, and then paste in a fill color and
+it will try to to do the node paste callbacks in addition to the normal text
+paste.
+
+The error says testCb is not a function, which is true because the test didn't
+directly test the test callback way for testing node paste, but rather
+unintentionally went down this path from a normal text edit paste.
+
+Error:
+
+[js/node-manage.js]
+    In window.issuePaste
+        if (window.gTest) { testCb(); } // causes console error:
+Uncaught TypeError: testCb is not a function
+
+Fix:
+
+[js/node-manage.js]
+    In window.addEventListener("paste"
+        - if (window.gStarted) {
+        + if (window.gStarted &&
+        +     window.getComputedStyle(document.getElementById("editModalBG"))
+        +         .visibility != "visible"
+        + ) {
+              ..
+              window.issuePaste();
+Assured by Test:
+    [test/node_management_tdd.js] #53

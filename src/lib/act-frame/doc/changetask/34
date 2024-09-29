@@ -1,0 +1,41 @@
+CHANGETASK 34 --
+DRAG-TO-MOVE SELECTED NODE SHOULD MOVE SUBSELECTED NODES UNIFORMLY
+type    =    bug
+
+
+1. Select fork (line) and 2 arrows (polylines)
+---------------
+    ======        (before the move)
+     |  |
+     v  v
+
+---------------
+
+2. Drag downward to attempt moving all 3 nodes downward and
+   notice that 1 polyline shifted upward
+---------------
+
+     |
+    =v====        (after the move)
+        |
+        v
+---------------
+
+
+Test that assures the fix 
+* test #45 [test/node_movement_tdd.js]
+
+Generalized test that assures for all permuted cases 
+* test #46 [test/node_movement_tdd.js]
+
+Fix mapping "case polyline -> polyline" [js/node-map.js]
+- addscalarr(dest, "points", "odd", diffscalarr(cacheNd,src,"points","even"));
++ addscalarr(dest, "points", "odd", diffscalarr(cacheNd,src,"points","odd"));
+
+2. when bug fix is implemented
+---------------
+
+    ======        (after the move all nodes moved together)
+     |  |
+     v  v
+---------------

@@ -1,0 +1,58 @@
+#!/bin/bash
+
+res1=$(node --experimental-modules test/tdd_cirun.js 2>&1 1>>/dev/null)
+echo "$res1"
+failed1_txt=$(echo "$res1" | grep fail)
+failed2_txt=""
+
+array=( 5 35 57 58 75 76 77 78 80 81 82 83 84 )
+
+echo "--- toggled for failure. All tests should fail: ---"
+
+for n in "${array[@]}"
+do
+    fname=$(grep -r "// TDDTEST${n} F" . | cut -d : -f1 | grep -v ".bak" | grep -v '~')
+    # echo "$fname"
+    if [[ ! -f "$fname" ]]; then
+        echo "  ${n} Error!"
+        failed2_txt="${failed2_txt}"$'\n'"test${n} - error"
+    else
+        sed -i.bak "s/\/\/ TDDTEST${n} F/return;\/\/ TDDTEST${n} F/" "$fname"
+        res=$(node --experimental-modules test/tdd_cirun.js 2>&1 ) # | grep "\- fail")
+        # echo "$res"
+        res=$(echo "$res" | grep "test${n} - ")
+        echo "$res"
+        failed2_txt=$(echo "${failed2_txt} ${res}" | grep pass)
+        # if [[ "$res" = "test${n} - fail" ]]; then
+        #     echo "  ${n} yes"
+        # else
+        #     echo "  ${n} no"
+        # fi
+        sed -i.bak2 "s/return;\/\/ TDDTEST${n} F/\/\/ TDDTEST${n} F/" "$fname"
+    fi
+done
+
+
+failed=0
+if [[ -n "$failed1_txt" ]]; then
+    failed=1
+fi
+
+if [[ -n "$failed2_txt" ]]; then
+    failed=1
+fi
+
+if [[ $failed -eq 1 ]]; then
+    echo
+    echo ---
+    echo
+    echo TEST\(S\) FAILURE SUMMARY 1>&2
+    echo "Tests should have passed:"
+    echo "$failed1_txt"
+    echo "Tests should have failed:"
+    echo "$failed2_txt"
+
+    exit 1;
+fi
+
+echo TEST\(S\) SUMMARY - ALL PASS/FAIL AS EXPECTED

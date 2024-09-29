@@ -1,0 +1,16 @@
+CT/48      V0.2      NODE-DRAWING              RESIZE DECISION NODE      FTR
+
+ _
+/ \
+\_/ 
+  \
+   dragging from bottom-right corner area will start resizing the polyline shape
+   ______
+  /      \
+  \______/
+           \
+            resized
+
+depends on shared code to-be-created as part of ct/47
+
+Update: this task will focus on resizing a 6-sided decision node.

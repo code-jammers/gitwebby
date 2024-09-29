@@ -1,0 +1,16 @@
+CHANGELOG 2023-03-26 -- V0.2 -- NODE COMMAND
+
+ct/49 :: added setx functionality, and incx/y updates on move
+
+CHANGELOG 2023-04-09 -- V0.2 -- NODE COMMAND
+
+ct/49 :: add (failing) command tests
+
+CHANGELOG 2023-04-16 -- V0.2 -- NODE COMMAND
+
+ct/49 :: add set x,y,w,h impl and add (failing) inc tests
+
+CHANGELOG 2023-04-23 -- V0.2 -- NODE COMMAND
+
+ct/49 :: add incx, incy, incw, inch impl. w/ tests
+

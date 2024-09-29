@@ -1,0 +1,34 @@
+CHANGETASK 43 --
+QUICKLY SELECTING TO REMOVE START ELEMENTS SHOULD BE ABLE TO SELECT ELEMENTS
+IMMEDIATELY WITHOUT WAITING FIRST
+
+OnStart
+    \
+     click then immediately go to select elements in the svg area
+
+
+    ...
+    . .
+    ...
+      \
+       should have started the selection rectangle but instead it did the normal
+       select html page behavior.
+
+Fix:
+    In [../../index.js]
+        In window.onStart
+            - window.gDispatch(function(){document.onmousedown = mousedown; document.onmousemove = mousemove; document.onmouseup = mouseup; }, 800);// skip first click
+            + window.gDispatch(
+            +     function(){
+            +         document.onmousedown = mousedown;
+            +         document.onmousemove = mousemove;
+            +         document.onmouseup = mouseup;
+            +     }, // end dispatch callback
+            +     8
+            + );// skip first click
+
+No Test Assurance:
+
+Since the gDispatch function does not wait in test mode (test mode skips the
+setTimeouts), this fix wouldn't be very testable. Ideally this should be
+remediated to see if this dispatch call can be removed altogether.

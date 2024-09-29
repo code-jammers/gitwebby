@@ -1,0 +1,18 @@
+CHANGELOG 2023-04-01 -- V0.2 -- XML EDITING
+
+ct/52 :: auto-start svg display for immediate edit updates
+ct/53 :: add svg text (xml) attribute validation
+
+CHANGELOG 2023-04-22 -- V0.2 -- XML EDITING
+
+ct/52 :: fixed bug where xml element order changed after dragging to select
+ct/53 :: build package.json for xml validation libraries
+ct/53 :: visual indication that xml edit fails validation
+ct/53 :: added rect, line, polyline, circle attribute validation
+
+CHANGELOG 2023-04-29 -- V0.2 -- XML EDITING
+
+ct/52 :: relate automatic onStart with ct/52 task in comment
+ct/53 :: restructured xml editor (xeEditor) class to be testable
+ct/53 :: unit tests ensure sax parse and fast xml validator are called correctly
+ct/53 :: integration tests for x,y,width,height attributes textarea edits
